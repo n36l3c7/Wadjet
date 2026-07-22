@@ -609,6 +609,15 @@ body {
   border-left-color: var(--danger);
 }
 
+.timeline-entry--analysis {
+  border-left-color: #6ea8d8;
+  padding: 0;
+}
+
+.timeline-entry--analysis > details {
+  padding: 8px 10px;
+}
+
 .req-actions {
   margin-top: 8px;
 }

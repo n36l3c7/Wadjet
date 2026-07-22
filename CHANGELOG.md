@@ -8,6 +8,24 @@ During the `0.x` series, each wave maps to a minor version.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-22
+
+### Added
+
+- **Wave 7 — DevTools panel.**
+- A "Wadjet" DevTools panel that runs deterministic, individually-explainable
+  security-header checks (CSP, HSTS, X-Content-Type-Options, X-Frame-Options,
+  Referrer-Policy, Permissions-Policy, COOP/COEP/CORP) on the inspected page's
+  main document response — present / missing / weak, with a reason for each and
+  no aggregate grade.
+- TLS/certificate info for the page (state, protocol, cipher, subject, issuer,
+  validity) collected in the background via `webRequest.getSecurityInfo`.
+- Findings attach to the active case as a new `page-analysis` entry kind.
+- New permission: `webRequestBlocking` (required by `getSecurityInfo`; the
+  listener observes only). TLS additionally needs the optional `<all_urls>` host
+  permission and is the one place the project uses Firefox's MV3-retained
+  blocking `webRequest` (ADR 0001).
+
 ## [0.6.0] - 2026-07-22
 
 ### Added
@@ -125,7 +143,8 @@ During the `0.x` series, each wave maps to a minor version.
   `web-ext lint` on every push and pull request.
 - Documentation: README, CONTRIBUTING, and SECURITY.
 
-[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/n36l3c7/Wadjet/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/n36l3c7/Wadjet/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/n36l3c7/Wadjet/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/n36l3c7/Wadjet/compare/v0.3.0...v0.4.0

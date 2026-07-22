@@ -19,6 +19,7 @@ import type {
   DecodedArtifactEntry,
   DetonationEntry,
   NoteEntry,
+  PageAnalysisEntry,
   RequestEntry,
 } from '../core/case/types';
 import type { ExportFormat } from '../core/export';
@@ -269,6 +270,45 @@ function renderDetonation(entry: DetonationEntry): HTMLLIElement {
   return li;
 }
 
+function renderPageAnalysis(entry: PageAnalysisEntry): HTMLLIElement {
+  const li = document.createElement('li');
+  li.className = 'timeline-entry timeline-entry--analysis';
+  const details = document.createElement('details');
+  const summary = document.createElement('summary');
+  summary.className = 'req-summary';
+  const missing = entry.findings.filter((finding) => finding.status === 'missing').length;
+  summary.append(
+    span('req-method', 'PAGE'),
+    span('req-url', entry.url),
+    span('req-status', `${String(missing)} missing`),
+  );
+  details.append(summary);
+
+  const list = document.createElement('div');
+  list.className = 'req-headers';
+  for (const finding of entry.findings) {
+    const row = document.createElement('div');
+    row.className = 'req-header';
+    row.append(
+      span('req-header__name', `${finding.header}: `),
+      span('', `${finding.status} — ${finding.detail}`),
+    );
+    list.append(row);
+  }
+  details.append(list);
+
+  if (entry.tls !== null) {
+    const tls = document.createElement('div');
+    tls.className = 'req-meta';
+    tls.textContent = `TLS: ${entry.tls.state} · ${entry.tls.protocol ?? '—'} · issuer ${entry.tls.issuer ?? '—'}`;
+    details.append(tls);
+  }
+
+  li.append(details);
+  for (const tag of entry.tags) li.append(renderTag(tag));
+  return li;
+}
+
 function renderEntry(entry: CaseEntry): HTMLLIElement {
   switch (entry.kind) {
     case 'note':
@@ -281,6 +321,8 @@ function renderEntry(entry: CaseEntry): HTMLLIElement {
       return renderEnrichmentEntry(entry);
     case 'detonation':
       return renderDetonation(entry);
+    case 'page-analysis':
+      return renderPageAnalysis(entry);
   }
 }
 
@@ -303,6 +345,9 @@ function matchesTextFilter(entry: CaseEntry): boolean {
       break;
     case 'detonation':
       haystack = `${entry.url} ${entry.container}`;
+      break;
+    case 'page-analysis':
+      haystack = `${entry.url} ${entry.findings.map((finding) => `${finding.header} ${finding.status}`).join(' ')}`;
       break;
   }
   return haystack.toLowerCase().includes(query);
@@ -549,7 +594,8 @@ ui.filterKind.addEventListener('change', () => {
     value === 'request' ||
     value === 'decoded-artifact' ||
     value === 'enrichment' ||
-    value === 'detonation'
+    value === 'detonation' ||
+    value === 'page-analysis'
       ? value
       : 'all';
   if (state.activeCaseId !== null) {

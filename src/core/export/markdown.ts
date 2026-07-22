@@ -28,6 +28,10 @@ function summarize(entry: CaseEntry): string {
         .join(' | ')}`;
     case 'detonation':
       return `${entry.url} in ${entry.container}`;
+    case 'page-analysis': {
+      const missing = entry.findings.filter((finding) => finding.status === 'missing').length;
+      return `${entry.url} — ${String(missing)} security header(s) missing${entry.tls !== null ? `, TLS ${entry.tls.state}` : ''}`;
+    }
   }
 }
 

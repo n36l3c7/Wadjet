@@ -29,6 +29,8 @@ const buildOptions = {
     background: resolve(srcDir, 'background/index.ts'),
     'sidebar/index': resolve(srcDir, 'sidebar/index.ts'),
     'content/overlay': resolve(srcDir, 'content/overlay.ts'),
+    'devtools/devtools': resolve(srcDir, 'devtools/devtools.ts'),
+    'devtools/panel': resolve(srcDir, 'devtools/panel.ts'),
   },
   outdir: outDir,
   bundle: true,
@@ -47,6 +49,9 @@ async function copyStatic() {
   await cp(resolve(srcDir, 'icons'), resolve(outDir, 'icons'), { recursive: true });
   await cp(resolve(srcDir, 'sidebar/index.html'), resolve(outDir, 'sidebar/index.html'));
   await cp(resolve(srcDir, 'sidebar/styles.css'), resolve(outDir, 'sidebar/styles.css'));
+  await cp(resolve(srcDir, 'devtools/devtools.html'), resolve(outDir, 'devtools/devtools.html'));
+  await cp(resolve(srcDir, 'devtools/panel.html'), resolve(outDir, 'devtools/panel.html'));
+  await cp(resolve(srcDir, 'devtools/panel.css'), resolve(outDir, 'devtools/panel.css'));
 }
 
 async function clean() {

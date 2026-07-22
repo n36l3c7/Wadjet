@@ -11,7 +11,14 @@
  *
  * @module
  */
-import type { Case, DecodedArtifactEntry, EnrichmentEntry, NoteEntry } from '../case/types';
+import type { SecurityHeaderFinding, TlsInfo } from '../analysis/types';
+import type {
+  Case,
+  DecodedArtifactEntry,
+  EnrichmentEntry,
+  NoteEntry,
+  PageAnalysisEntry,
+} from '../case/types';
 import type { LookupOutcome } from '../enrich/service';
 import type { EnrichmentResult, ProviderId } from '../enrich/types';
 import type { ExportFile, ExportFormat } from '../export';
@@ -62,6 +69,16 @@ export interface RequestMap {
   };
   detonate: { params: { url: string }; result: { container: string; recorded: boolean } };
   'export.build': { params: { caseId: string; format: ExportFormat }; result: ExportFile };
+  'tls.get': { params: { url: string }; result: TlsInfo | null };
+  'analysis.add': {
+    params: {
+      caseId: string;
+      url: string;
+      findings: SecurityHeaderFinding[];
+      tls: TlsInfo | null;
+    };
+    result: PageAnalysisEntry;
+  };
 }
 
 /** All valid request type discriminants. */

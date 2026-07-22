@@ -16,16 +16,22 @@ reimplement them. See [Non-goals](#non-goals).
 
 ## Status
 
-**v0.6.0 — Export.** Export the active case as a **Markdown** report (metadata,
-extracted IOCs, timeline), a **HAR** of captured requests, a **CSV** of IOCs, or
-a full **JSON** dump — download the file or copy it to the clipboard, ready to
-paste into a report. IOCs are extracted from structured fields only (request and
-detonation URLs, decoded-artifact sources, enrichment indicators). Redacted
-header values stay redacted in every export.
+**v0.7.0 — DevTools panel.** A "Wadjet" DevTools panel does per-page analysis of
+the inspected tab: a deterministic **security-headers** view (CSP, HSTS,
+X-Content-Type-Options, Referrer-Policy, COOP/COEP/CORP, …) reporting
+present / missing / weak with an explanation for each, plus **TLS/certificate**
+info for the page. Findings attach to the active case as a `page-analysis`
+entry. Header analysis needs only DevTools; TLS uses `webRequest.getSecurityInfo`
+(see the note below).
 
-Earlier waves: **v0.5.0** isolated detonation; **v0.4.0** enrichment; **v0.3.0**
-inline decoders; **v0.2.0** opt-in traffic capture; **v0.1.0** the Foundation.
-See [`CHANGELOG.md`](CHANGELOG.md).
+Earlier waves: **v0.6.0** export; **v0.5.0** isolated detonation; **v0.4.0**
+enrichment; **v0.3.0** inline decoders; **v0.2.0** opt-in traffic capture;
+**v0.1.0** the Foundation. See [`CHANGELOG.md`](CHANGELOG.md).
+
+> Note: TLS info requires a **blocking** `webRequest` listener (the one place we
+> rely on Firefox's MV3-retained blocking `webRequest`, per ADR 0001), so it adds
+> the `webRequestBlocking` permission and only works once the optional
+> `<all_urls>` host permission is granted (e.g. by enabling traffic capture).
 
 ## Requirements
 
@@ -88,7 +94,12 @@ Shared domain logic lives in `src/core/`:
 - `core/settings/` — extension settings, including per-provider API keys.
 - `core/export/` — IOC extraction and the Markdown / HAR / CSV / JSON export
   builders, all pure and unit-tested.
+- `core/analysis/` — the deterministic security-header analyzer and the TLS-info
+  shape used by the DevTools panel.
 - `core/messaging/` — the typed request/response protocol and client.
+
+A DevTools page and panel (`src/devtools/`) provide per-page analysis; the
+background collects TLS info via `webRequest.getSecurityInfo`.
 
 Persisted records carry a `schemaVersion`, so the on-disk shape can evolve
 across waves through explicit migrations rather than guesswork.
@@ -102,6 +113,7 @@ justified here and in the PR that introduced it.
 | ------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------- |
 | `storage`                 | v0.1.0 | Persist the case list and the active-case pointer locally.                                                           |
 | `webRequest`              | v0.2.0 | Observe request metadata and headers for traffic capture (non-blocking; never intercepting).                         |
+| `webRequestBlocking`      | v0.7.0 | Required by `getSecurityInfo` to read TLS/certificate info; the listener observes only and never blocks or modifies. |
 | `<all_urls>` (optional)   | v0.2.0 | Host access to capture across sites. **Optional** — requested only when you start capture.                           |
 | `menus`                   | v0.3.0 | Add the "Decode selection" context-menu item.                                                                        |
 | `activeTab`               | v0.3.0 | Access the current tab to inject the decoder overlay, granted by the menu click.                                     |

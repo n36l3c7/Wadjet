@@ -9,6 +9,7 @@
  *
  * @module
  */
+import type { SecurityHeaderFinding, TlsInfo } from '../analysis/types';
 import type { EnrichmentResult } from '../enrich/types';
 import type { ContentStore, EntryPage, EntryQuery, MetadataStore } from '../storage/types';
 import type { CapturedRequest } from '../traffic/request-tracker';
@@ -21,6 +22,7 @@ import {
   type DetonationEntry,
   type EnrichmentEntry,
   type NoteEntry,
+  type PageAnalysisEntry,
   type RequestEntry,
 } from './types';
 
@@ -302,6 +304,32 @@ export class CaseService {
       url: params.url,
       container: params.container,
       cookieStoreId: params.cookieStoreId,
+    };
+    await this.#content.addEntry(entry);
+    return entry;
+  }
+
+  /**
+   * Record a per-page analysis (security headers + optional TLS) against an open
+   * case.
+   *
+   * @throws {CaseNotFoundError} If the case does not exist.
+   * @throws {CaseClosedError} If the case is closed.
+   */
+  async addPageAnalysis(
+    caseId: string,
+    params: { url: string; findings: readonly SecurityHeaderFinding[]; tls: TlsInfo | null },
+  ): Promise<PageAnalysisEntry> {
+    const target = await this.#requireOpenCase(caseId);
+    const entry: PageAnalysisEntry = {
+      id: this.#newId(),
+      caseId: target.id,
+      kind: 'page-analysis',
+      timestamp: this.#now(),
+      tags: [],
+      url: params.url,
+      findings: [...params.findings],
+      tls: params.tls,
     };
     await this.#content.addEntry(entry);
     return entry;

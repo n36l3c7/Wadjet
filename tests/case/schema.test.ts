@@ -12,6 +12,7 @@ import {
   type DetonationEntry,
   type EnrichmentEntry,
   type NoteEntry,
+  type PageAnalysisEntry,
   type RequestEntry,
 } from '../../src/core/case/types';
 
@@ -221,5 +222,35 @@ describe('isCaseEntry (detonation)', () => {
   it('rejects a missing cookieStoreId', () => {
     const { cookieStoreId: _cookieStoreId, ...withoutStore } = validDetonation;
     expect(isCaseEntry(withoutStore)).toBe(false);
+  });
+});
+
+const validPageAnalysis: PageAnalysisEntry = {
+  id: 'p1',
+  caseId: 'c1',
+  kind: 'page-analysis',
+  timestamp: 1000,
+  tags: [],
+  url: 'https://example.com',
+  findings: [{ header: 'Content-Security-Policy', status: 'missing', detail: 'No CSP.' }],
+  tls: null,
+};
+
+describe('isCaseEntry (page-analysis)', () => {
+  it('accepts a well-formed analysis with null TLS', () => {
+    expect(isCaseEntry(validPageAnalysis)).toBe(true);
+  });
+
+  it('accepts an analysis with a TLS object', () => {
+    expect(isCaseEntry({ ...validPageAnalysis, tls: { state: 'secure' } })).toBe(true);
+  });
+
+  it('rejects malformed findings', () => {
+    expect(isCaseEntry({ ...validPageAnalysis, findings: [{ header: 'x' }] })).toBe(false);
+  });
+
+  it('rejects a missing url', () => {
+    const { url: _url, ...withoutUrl } = validPageAnalysis;
+    expect(isCaseEntry(withoutUrl)).toBe(false);
   });
 });

@@ -23,6 +23,7 @@ import { LocalMetadataStore } from '../core/storage/metadata-store';
 import type { KeyValueArea } from '../core/storage/types';
 import { registerContextMenus } from './context-menus';
 import { DetonationManager } from './detonation';
+import { SecurityInfoCollector } from './security-info';
 import { TrafficCapture } from './traffic-capture';
 
 /** Adapt `browser.storage.local` to the minimal {@link KeyValueArea} shape. */
@@ -80,6 +81,7 @@ interface BackgroundContext {
   readonly enrichment: EnrichmentService;
   readonly settings: SettingsStore;
   readonly detonation: DetonationManager;
+  readonly securityInfo: SecurityInfoCollector;
 }
 
 let contextPromise: Promise<BackgroundContext> | null = null;
@@ -110,7 +112,9 @@ function getContext(): Promise<BackgroundContext> {
       rateLimiterFor: (id) => rateLimiters.get(id) ?? fallbackBucket,
     });
     const detonation = createDetonationManager();
-    return { service, capture, enrichment, settings, detonation };
+    const securityInfo = new SecurityInfoCollector();
+    await securityInfo.init();
+    return { service, capture, enrichment, settings, detonation, securityInfo };
   })();
   return contextPromise;
 }
@@ -164,7 +168,7 @@ function isAnyRequest(value: unknown): value is AnyRequest {
 
 /** Route a validated request to the appropriate service. */
 async function dispatch(req: AnyRequest): Promise<Response<RequestType>> {
-  const { service, capture, enrichment, settings } = await getContext();
+  const { service, capture, enrichment, settings, securityInfo } = await getContext();
   switch (req.type) {
     case 'case.list':
       return { ok: true, data: await service.listCases() };
@@ -235,6 +239,17 @@ async function dispatch(req: AnyRequest): Promise<Response<RequestType>> {
         data: buildExport(req.params.format, caseRecord, entries, { toolVersion }),
       };
     }
+    case 'tls.get':
+      return { ok: true, data: securityInfo.getTls(req.params.url) };
+    case 'analysis.add':
+      return {
+        ok: true,
+        data: await service.addPageAnalysis(req.params.caseId, {
+          url: req.params.url,
+          findings: req.params.findings,
+          tls: req.params.tls,
+        }),
+      };
     default:
       return { ok: false, error: `Unknown request type: ${String((req as AnyRequest).type)}` };
   }

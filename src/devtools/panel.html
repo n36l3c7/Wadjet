@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Wadjet — page analysis</title>
+    <link rel="stylesheet" href="panel.css" />
+  </head>
+  <body>
+    <main class="panel">
+      <header class="panel__header">
+        <h1 class="panel__title">Page analysis</h1>
+        <button type="button" id="btn-reanalyze" class="btn">Reanalyze</button>
+      </header>
+
+      <p class="target" id="target">Waiting for a document response…</p>
+
+      <section aria-label="Security headers">
+        <h2 class="section__title">Security headers</h2>
+        <ul class="findings" id="findings"></ul>
+      </section>
+
+      <section aria-label="TLS and certificate">
+        <h2 class="section__title">TLS / certificate</h2>
+        <div class="tls" id="tls"></div>
+      </section>
+
+      <footer class="panel__footer">
+        <span class="target-case" id="target-case">no active case</span>
+        <button type="button" id="btn-add" class="btn btn--primary" disabled>Add to case</button>
+      </footer>
+    </main>
+    <script src="panel.js"></script>
+  </body>
+</html>

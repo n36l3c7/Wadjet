@@ -23,6 +23,7 @@ const ENTRY_KINDS: readonly CaseEntryKind[] = [
   'decoded-artifact',
   'enrichment',
   'detonation',
+  'page-analysis',
 ];
 const REQUEST_OUTCOMES = ['completed', 'error'] as const;
 
@@ -115,6 +116,24 @@ function isEnrichmentShape(value: Record<string, unknown>): boolean {
   );
 }
 
+function isSecurityFinding(value: unknown): boolean {
+  return (
+    isRecord(value) &&
+    typeof value.header === 'string' &&
+    typeof value.status === 'string' &&
+    typeof value.detail === 'string'
+  );
+}
+
+function isPageAnalysisShape(value: Record<string, unknown>): boolean {
+  return (
+    typeof value.url === 'string' &&
+    Array.isArray(value.findings) &&
+    value.findings.every(isSecurityFinding) &&
+    (value.tls === null || isRecord(value.tls))
+  );
+}
+
 function isDetonationShape(value: Record<string, unknown>): boolean {
   return (
     typeof value.url === 'string' &&
@@ -191,6 +210,8 @@ export function isCaseEntry(value: unknown): value is CaseEntry {
       return isEnrichmentShape(value);
     case 'detonation':
       return isDetonationShape(value);
+    case 'page-analysis':
+      return isPageAnalysisShape(value);
     default:
       return false;
   }

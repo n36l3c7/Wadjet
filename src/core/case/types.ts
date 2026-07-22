@@ -7,6 +7,7 @@
  *
  * @module
  */
+import type { SecurityHeaderFinding, TlsInfo } from '../analysis/types';
 import type { EnrichmentResult } from '../enrich/types';
 
 /**
@@ -40,11 +41,12 @@ export interface Case {
  * Discriminant identifying the concrete shape of a {@link CaseEntry}.
  *
  * Wave 1 added `note`; Wave 2 added `request`; Wave 3 added `decoded-artifact`;
- * Wave 4 added `enrichment`; Wave 5 adds `detonation`. Later waves may extend
- * this union further (e.g. `screenshot`); the discriminated-union design keeps
- * timeline, tagging and export code agnostic to which kinds exist.
+ * Wave 4 added `enrichment`; Wave 5 added `detonation`; Wave 7 adds
+ * `page-analysis`. The discriminated-union design keeps timeline, tagging and
+ * export code agnostic to which kinds exist.
  */
-export type CaseEntryKind = 'note' | 'request' | 'decoded-artifact' | 'enrichment' | 'detonation';
+export type CaseEntryKind =
+  'note' | 'request' | 'decoded-artifact' | 'enrichment' | 'detonation' | 'page-analysis';
 
 /** Fields shared by every entry, regardless of {@link CaseEntryKind}. */
 export interface CaseEntryBase {
@@ -167,8 +169,25 @@ export interface DetonationEntry extends CaseEntryBase {
 }
 
 /**
+ * Per-page analysis captured from the DevTools panel: the deterministic
+ * security-header findings for a page and, when available, its TLS/certificate
+ * information.
+ */
+export interface PageAnalysisEntry extends CaseEntryBase {
+  readonly kind: 'page-analysis';
+  readonly url: string;
+  readonly findings: SecurityHeaderFinding[];
+  readonly tls: TlsInfo | null;
+}
+
+/**
  * Any entry attached to a case. A discriminated union over {@link CaseEntryKind};
  * narrow on `kind` to reach kind-specific fields.
  */
 export type CaseEntry =
-  NoteEntry | RequestEntry | DecodedArtifactEntry | EnrichmentEntry | DetonationEntry;
+  | NoteEntry
+  | RequestEntry
+  | DecodedArtifactEntry
+  | EnrichmentEntry
+  | DetonationEntry
+  | PageAnalysisEntry;

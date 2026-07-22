@@ -333,3 +333,32 @@ describe('CaseService — detonation', () => {
     ).rejects.toBeInstanceOf(CaseClosedError);
   });
 });
+
+describe('CaseService — page analysis', () => {
+  let service: CaseService;
+
+  beforeEach(() => {
+    service = makeService();
+  });
+
+  it('records a page analysis against an open case', async () => {
+    const created = await service.createCase('analyze');
+    const entry = await service.addPageAnalysis(created.id, {
+      url: 'https://example.com',
+      findings: [{ header: 'Content-Security-Policy', status: 'missing', detail: 'No CSP.' }],
+      tls: null,
+    });
+    expect(entry.kind).toBe('page-analysis');
+    expect(entry.url).toBe('https://example.com');
+    expect(entry.findings).toHaveLength(1);
+    expect(entry.tls).toBeNull();
+  });
+
+  it('refuses a closed case', async () => {
+    const created = await service.createCase('analyze');
+    await service.closeCase(created.id);
+    await expect(
+      service.addPageAnalysis(created.id, { url: 'https://x', findings: [], tls: null }),
+    ).rejects.toBeInstanceOf(CaseClosedError);
+  });
+});
