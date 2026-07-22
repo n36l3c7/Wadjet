@@ -14,6 +14,10 @@ coverage/
 # web-ext
 web-ext-artifacts/
 
+# Python (native host)
+__pycache__/
+*.pyc
+
 # Editor / OS
 .DS_Store
 Thumbs.db

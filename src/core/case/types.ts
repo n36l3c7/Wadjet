@@ -41,12 +41,18 @@ export interface Case {
  * Discriminant identifying the concrete shape of a {@link CaseEntry}.
  *
  * Wave 1 added `note`; Wave 2 added `request`; Wave 3 added `decoded-artifact`;
- * Wave 4 added `enrichment`; Wave 5 added `detonation`; Wave 7 adds
- * `page-analysis`. The discriminated-union design keeps timeline, tagging and
- * export code agnostic to which kinds exist.
+ * Wave 4 added `enrichment`; Wave 5 added `detonation`; Wave 7 added
+ * `page-analysis`; Wave 8 adds `tool-result`. The discriminated-union design
+ * keeps timeline, tagging and export code agnostic to which kinds exist.
  */
 export type CaseEntryKind =
-  'note' | 'request' | 'decoded-artifact' | 'enrichment' | 'detonation' | 'page-analysis';
+  | 'note'
+  | 'request'
+  | 'decoded-artifact'
+  | 'enrichment'
+  | 'detonation'
+  | 'page-analysis'
+  | 'tool-result';
 
 /** Fields shared by every entry, regardless of {@link CaseEntryKind}. */
 export interface CaseEntryBase {
@@ -181,6 +187,18 @@ export interface PageAnalysisEntry extends CaseEntryBase {
 }
 
 /**
+ * The output of a local tool run by the optional native host (e.g. `whois`,
+ * `exiftool`, `yara`), attached to the case.
+ */
+export interface ToolResultEntry extends CaseEntryBase {
+  readonly kind: 'tool-result';
+  readonly tool: string;
+  readonly input: string;
+  readonly output: string;
+  readonly exitCode: number;
+}
+
+/**
  * Any entry attached to a case. A discriminated union over {@link CaseEntryKind};
  * narrow on `kind` to reach kind-specific fields.
  */
@@ -190,4 +208,5 @@ export type CaseEntry =
   | DecodedArtifactEntry
   | EnrichmentEntry
   | DetonationEntry
-  | PageAnalysisEntry;
+  | PageAnalysisEntry
+  | ToolResultEntry;

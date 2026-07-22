@@ -92,6 +92,28 @@
         </div>
       </section>
 
+      <section class="native" aria-label="Native host">
+        <h2 class="section__title">
+          Native host <span id="native-status" class="native__status">checking…</span>
+        </h2>
+        <div class="native__row">
+          <button type="button" id="btn-archive" class="btn" disabled>Archive case to host</button>
+        </div>
+        <div class="native__row">
+          <select id="tool-select" class="tool-select" aria-label="Tool">
+            <option value="whois">whois</option>
+            <option value="exiftool">exiftool</option>
+            <option value="yara">yara</option>
+          </select>
+          <input id="tool-input" class="tool-input" type="text" placeholder="indicator / path" />
+          <button type="button" id="btn-run-tool" class="btn">Run</button>
+        </div>
+        <p class="native__hint">
+          Optional. Requires the <code>wadjet_host</code> helper installed — see
+          <code>native-host/</code>.
+        </p>
+      </section>
+
       <section class="timeline" aria-label="Case timeline">
         <div class="timeline__head">
           <h2 class="section__title">Timeline</h2>
@@ -104,6 +126,7 @@
               <option value="enrichment">Enriched</option>
               <option value="detonation">Detonations</option>
               <option value="page-analysis">Page analysis</option>
+              <option value="tool-result">Tool results</option>
             </select>
             <input
               id="filter-text"

@@ -21,7 +21,9 @@ import type {
   NoteEntry,
   PageAnalysisEntry,
   RequestEntry,
+  ToolResultEntry,
 } from '../core/case/types';
+import type { NativeTool } from '../core/native/protocol';
 import type { ExportFormat } from '../core/export';
 import { sendRequest } from '../core/messaging/client';
 import type { CaptureState } from '../core/traffic/state';
@@ -66,6 +68,11 @@ const ui = {
   exportFormat: must<HTMLSelectElement>('#export-format'),
   btnExportDownload: must<HTMLButtonElement>('#btn-export-download'),
   btnExportCopy: must<HTMLButtonElement>('#btn-export-copy'),
+  nativeStatus: must<HTMLElement>('#native-status'),
+  btnArchive: must<HTMLButtonElement>('#btn-archive'),
+  toolSelect: must<HTMLSelectElement>('#tool-select'),
+  toolInput: must<HTMLInputElement>('#tool-input'),
+  btnRunTool: must<HTMLButtonElement>('#btn-run-tool'),
 };
 
 type KindFilter = 'all' | CaseEntryKind;
@@ -309,6 +316,27 @@ function renderPageAnalysis(entry: PageAnalysisEntry): HTMLLIElement {
   return li;
 }
 
+function renderToolResult(entry: ToolResultEntry): HTMLLIElement {
+  const li = document.createElement('li');
+  li.className = 'timeline-entry timeline-entry--tool';
+  const details = document.createElement('details');
+  const summary = document.createElement('summary');
+  summary.className = 'req-summary';
+  summary.append(
+    span('req-method', entry.tool.toUpperCase()),
+    span('req-url', entry.input),
+    span('req-status', `exit ${String(entry.exitCode)}`),
+  );
+  details.append(summary);
+  const output = document.createElement('pre');
+  output.className = 'dec-value';
+  output.textContent = entry.output;
+  details.append(output);
+  li.append(details);
+  for (const tag of entry.tags) li.append(renderTag(tag));
+  return li;
+}
+
 function renderEntry(entry: CaseEntry): HTMLLIElement {
   switch (entry.kind) {
     case 'note':
@@ -323,6 +351,8 @@ function renderEntry(entry: CaseEntry): HTMLLIElement {
       return renderDetonation(entry);
     case 'page-analysis':
       return renderPageAnalysis(entry);
+    case 'tool-result':
+      return renderToolResult(entry);
   }
 }
 
@@ -348,6 +378,9 @@ function matchesTextFilter(entry: CaseEntry): boolean {
       break;
     case 'page-analysis':
       haystack = `${entry.url} ${entry.findings.map((finding) => `${finding.header} ${finding.status}`).join(' ')}`;
+      break;
+    case 'tool-result':
+      haystack = `${entry.tool} ${entry.input} ${entry.output}`;
       break;
   }
   return haystack.toLowerCase().includes(query);
@@ -435,6 +468,7 @@ async function refresh(): Promise<void> {
   ui.btnCloseCase.disabled = active === null;
   ui.composer.hidden = active === null;
   ui.exportSection.hidden = active === null;
+  ui.btnArchive.disabled = active === null;
 
   renderCapture();
 
@@ -553,6 +587,43 @@ async function exportCopy(): Promise<void> {
   }, 1500);
 }
 
+function selectedTool(): NativeTool {
+  const value = ui.toolSelect.value;
+  return value === 'exiftool' || value === 'yara' ? value : 'whois';
+}
+
+async function pingNative(): Promise<void> {
+  const nativeState = await sendRequest('native.ping', {});
+  ui.nativeStatus.textContent = nativeState.connected
+    ? `connected · v${nativeState.version ?? '?'}`
+    : 'not connected';
+  ui.nativeStatus.classList.toggle('native__status--on', nativeState.connected);
+}
+
+async function archiveCase(): Promise<void> {
+  if (state.activeCaseId === null) return;
+  const result = await sendRequest('native.archive', { caseId: state.activeCaseId });
+  ui.nativeStatus.textContent = result.ok
+    ? `archived ${String(result.rows)} rows → ${result.evidenceDir ?? ''}`
+    : `archive failed: ${result.error ?? ''}`;
+}
+
+async function runTool(): Promise<void> {
+  const input = ui.toolInput.value.trim();
+  if (input === '') return;
+  const result = await sendRequest('native.tool', {
+    caseId: state.activeCaseId,
+    tool: selectedTool(),
+    input,
+  });
+  if (!result.ok) {
+    ui.nativeStatus.textContent = `tool failed: ${result.error ?? ''}`;
+    return;
+  }
+  ui.toolInput.value = '';
+  await refresh();
+}
+
 /** Run an async action, surfacing failures instead of leaving the panel broken. */
 function run(context: string, action: Promise<void>): Promise<void> {
   return action.catch((error: unknown) => {
@@ -576,6 +647,8 @@ ui.btnDetonate.addEventListener('click', () => {
 });
 ui.btnExportDownload.addEventListener('click', () => void run('export download', exportDownload()));
 ui.btnExportCopy.addEventListener('click', () => void run('export copy', exportCopy()));
+ui.btnArchive.addEventListener('click', () => void run('archive', archiveCase()));
+ui.btnRunTool.addEventListener('click', () => void run('run tool', runTool()));
 
 ui.btnCaptureToggle.addEventListener('click', () => {
   // Decide synchronously from cached state so the permission prompt (start) runs
@@ -595,7 +668,8 @@ ui.filterKind.addEventListener('change', () => {
     value === 'decoded-artifact' ||
     value === 'enrichment' ||
     value === 'detonation' ||
-    value === 'page-analysis'
+    value === 'page-analysis' ||
+    value === 'tool-result'
       ? value
       : 'all';
   if (state.activeCaseId !== null) {
@@ -615,3 +689,4 @@ setupEnrichment({
 });
 
 void run('load', refresh());
+void run('native ping', pingNative());

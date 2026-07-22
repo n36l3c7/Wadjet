@@ -32,6 +32,8 @@ function summarize(entry: CaseEntry): string {
       const missing = entry.findings.filter((finding) => finding.status === 'missing').length;
       return `${entry.url} — ${String(missing)} security header(s) missing${entry.tls !== null ? `, TLS ${entry.tls.state}` : ''}`;
     }
+    case 'tool-result':
+      return `${entry.tool} (${entry.input}) → exit ${String(entry.exitCode)}: ${collapse(entry.output, 120)}`;
   }
 }
 

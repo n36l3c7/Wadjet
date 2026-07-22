@@ -22,6 +22,7 @@ import type {
 import type { LookupOutcome } from '../enrich/service';
 import type { EnrichmentResult, ProviderId } from '../enrich/types';
 import type { ExportFile, ExportFormat } from '../export';
+import type { NativeTool } from '../native/protocol';
 import type { SettingsView } from '../settings/store';
 import type { EntryPage, EntryQuery } from '../storage/types';
 import type { CaptureState } from '../traffic/state';
@@ -78,6 +79,24 @@ export interface RequestMap {
       tls: TlsInfo | null;
     };
     result: PageAnalysisEntry;
+  };
+  'native.ping': {
+    params: Record<string, never>;
+    result: { connected: boolean; version: string | null };
+  };
+  'native.archive': {
+    params: { caseId: string };
+    result: {
+      ok: boolean;
+      dbPath: string | null;
+      evidenceDir: string | null;
+      rows: number;
+      error: string | null;
+    };
+  };
+  'native.tool': {
+    params: { caseId: string | null; tool: NativeTool; input: string };
+    result: { ok: boolean; output: string; exitCode: number; error: string | null };
   };
 }
 

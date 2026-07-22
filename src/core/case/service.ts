@@ -24,6 +24,7 @@ import {
   type NoteEntry,
   type PageAnalysisEntry,
   type RequestEntry,
+  type ToolResultEntry,
 } from './types';
 
 /** Maximum stored length of a decoded artifact's input or output, in characters. */
@@ -330,6 +331,33 @@ export class CaseService {
       url: params.url,
       findings: [...params.findings],
       tls: params.tls,
+    };
+    await this.#content.addEntry(entry);
+    return entry;
+  }
+
+  /**
+   * Record the output of a local tool run by the native host against an open
+   * case.
+   *
+   * @throws {CaseNotFoundError} If the case does not exist.
+   * @throws {CaseClosedError} If the case is closed.
+   */
+  async addToolResult(
+    caseId: string,
+    params: { tool: string; input: string; output: string; exitCode: number },
+  ): Promise<ToolResultEntry> {
+    const target = await this.#requireOpenCase(caseId);
+    const entry: ToolResultEntry = {
+      id: this.#newId(),
+      caseId: target.id,
+      kind: 'tool-result',
+      timestamp: this.#now(),
+      tags: [],
+      tool: params.tool,
+      input: params.input,
+      output: params.output,
+      exitCode: params.exitCode,
     };
     await this.#content.addEntry(entry);
     return entry;

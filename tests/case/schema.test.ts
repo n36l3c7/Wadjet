@@ -14,6 +14,7 @@ import {
   type NoteEntry,
   type PageAnalysisEntry,
   type RequestEntry,
+  type ToolResultEntry,
 } from '../../src/core/case/types';
 
 const validCase: Case = {
@@ -252,5 +253,32 @@ describe('isCaseEntry (page-analysis)', () => {
   it('rejects a missing url', () => {
     const { url: _url, ...withoutUrl } = validPageAnalysis;
     expect(isCaseEntry(withoutUrl)).toBe(false);
+  });
+});
+
+const validToolResult: ToolResultEntry = {
+  id: 'k1',
+  caseId: 'c1',
+  kind: 'tool-result',
+  timestamp: 1000,
+  tags: [],
+  tool: 'whois',
+  input: 'example.com',
+  output: 'Domain Name: EXAMPLE.COM',
+  exitCode: 0,
+};
+
+describe('isCaseEntry (tool-result)', () => {
+  it('accepts a well-formed tool result', () => {
+    expect(isCaseEntry(validToolResult)).toBe(true);
+  });
+
+  it('rejects a missing tool', () => {
+    const { tool: _tool, ...withoutTool } = validToolResult;
+    expect(isCaseEntry(withoutTool)).toBe(false);
+  });
+
+  it('rejects a non-numeric exit code', () => {
+    expect(isCaseEntry({ ...validToolResult, exitCode: 'zero' })).toBe(false);
   });
 });

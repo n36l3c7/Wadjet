@@ -24,6 +24,7 @@ const ENTRY_KINDS: readonly CaseEntryKind[] = [
   'enrichment',
   'detonation',
   'page-analysis',
+  'tool-result',
 ];
 const REQUEST_OUTCOMES = ['completed', 'error'] as const;
 
@@ -134,6 +135,15 @@ function isPageAnalysisShape(value: Record<string, unknown>): boolean {
   );
 }
 
+function isToolResultShape(value: Record<string, unknown>): boolean {
+  return (
+    typeof value.tool === 'string' &&
+    typeof value.input === 'string' &&
+    typeof value.output === 'string' &&
+    typeof value.exitCode === 'number'
+  );
+}
+
 function isDetonationShape(value: Record<string, unknown>): boolean {
   return (
     typeof value.url === 'string' &&
@@ -212,6 +222,8 @@ export function isCaseEntry(value: unknown): value is CaseEntry {
       return isDetonationShape(value);
     case 'page-analysis':
       return isPageAnalysisShape(value);
+    case 'tool-result':
+      return isToolResultShape(value);
     default:
       return false;
   }

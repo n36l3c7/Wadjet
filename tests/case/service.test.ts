@@ -362,3 +362,32 @@ describe('CaseService — page analysis', () => {
     ).rejects.toBeInstanceOf(CaseClosedError);
   });
 });
+
+describe('CaseService — tool results', () => {
+  let service: CaseService;
+
+  beforeEach(() => {
+    service = makeService();
+  });
+
+  it('records a tool result against an open case', async () => {
+    const created = await service.createCase('tools');
+    const entry = await service.addToolResult(created.id, {
+      tool: 'whois',
+      input: 'example.com',
+      output: 'Domain Name: EXAMPLE.COM',
+      exitCode: 0,
+    });
+    expect(entry.kind).toBe('tool-result');
+    expect(entry.tool).toBe('whois');
+    expect(entry.exitCode).toBe(0);
+  });
+
+  it('refuses a closed case', async () => {
+    const created = await service.createCase('tools');
+    await service.closeCase(created.id);
+    await expect(
+      service.addToolResult(created.id, { tool: 'whois', input: 'x', output: '', exitCode: 0 }),
+    ).rejects.toBeInstanceOf(CaseClosedError);
+  });
+});

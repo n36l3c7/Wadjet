@@ -657,3 +657,70 @@ body {
 .export__row .btn {
   flex: 0 0 auto;
 }
+
+/* Native host */
+.native {
+  border-top: 1px solid var(--border);
+  padding-top: var(--gap);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.native__status {
+  font-size: 0.68rem;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text-dim);
+}
+
+.native__status--on {
+  color: #7fbf7f;
+}
+
+.native__row {
+  display: flex;
+  gap: 6px;
+}
+
+.native__row .btn {
+  flex: 0 0 auto;
+}
+
+.tool-select {
+  flex: 0 0 auto;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--text);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 6px;
+}
+
+.tool-input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--text);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 6px;
+}
+
+.native__hint {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+.timeline-entry--tool {
+  border-left-color: #b088d8;
+  padding: 0;
+}
+
+.timeline-entry--tool > details {
+  padding: 8px 10px;
+}

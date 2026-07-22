@@ -8,6 +8,31 @@ During the `0.x` series, each wave maps to a minor version.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-07-23
+
+### Added
+
+- **Wave 8 — Native host.**
+- An optional Python native-messaging host (`native-host/wadjet_host.py`) that
+  archives a case into a local SQLite database, writes the export bundle
+  (Markdown/HAR/CSV/JSON) as filesystem evidence, and runs an allowlist of local
+  tools (`whois`, `exiftool`, `yara`) on validated inputs. The extension stays
+  fully functional without it.
+- Extension-side wiring: a `NativeHost` client, `native.ping` / `native.archive`
+  / `native.tool` messages, a sidebar "Native host" section (status, archive,
+  tool runner), and a new `tool-result` entry kind for tool output.
+- Host safety: no shell (argument arrays only), a fixed tool allowlist, indicator
+  validation for `whois`, and path confinement to the host's data directory for
+  `exiftool`/`yara`. The native manifest is locked to this extension.
+- New permission: `nativeMessaging`.
+
+### Note
+
+- The native host and its round-trip cannot be exercised in CI; the host's pure
+  functions (framing, validation, path confinement, tool-argv allowlist) have
+  their own `unittest` suite, and manual install/verification steps are in
+  `native-host/README.md`.
+
 ## [0.7.0] - 2026-07-22
 
 ### Added
@@ -143,7 +168,8 @@ During the `0.x` series, each wave maps to a minor version.
   `web-ext lint` on every push and pull request.
 - Documentation: README, CONTRIBUTING, and SECURITY.
 
-[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/n36l3c7/Wadjet/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/n36l3c7/Wadjet/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/n36l3c7/Wadjet/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/n36l3c7/Wadjet/compare/v0.4.0...v0.5.0

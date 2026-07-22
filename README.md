@@ -16,22 +16,20 @@ reimplement them. See [Non-goals](#non-goals).
 
 ## Status
 
-**v0.7.0 — DevTools panel.** A "Wadjet" DevTools panel does per-page analysis of
-the inspected tab: a deterministic **security-headers** view (CSP, HSTS,
-X-Content-Type-Options, Referrer-Policy, COOP/COEP/CORP, …) reporting
-present / missing / weak with an explanation for each, plus **TLS/certificate**
-info for the page. Findings attach to the active case as a `page-analysis`
-entry. Header analysis needs only DevTools; TLS uses `webRequest.getSecurityInfo`
-(see the note below).
+**v0.8.0 — Native host.** An **optional** Python native-messaging host adds a
+SQLite case archive, filesystem evidence (the export bundle written to disk), and
+a small allowlist of local tools (`whois`, `exiftool`, `yara`) run on validated
+inputs. The extension stays fully functional without it. See
+[`native-host/`](native-host/) to install it. Tool output attaches to the case as
+a `tool-result` entry.
 
-Earlier waves: **v0.6.0** export; **v0.5.0** isolated detonation; **v0.4.0**
-enrichment; **v0.3.0** inline decoders; **v0.2.0** opt-in traffic capture;
-**v0.1.0** the Foundation. See [`CHANGELOG.md`](CHANGELOG.md).
+Earlier waves: **v0.7.0** DevTools panel; **v0.6.0** export; **v0.5.0** isolated
+detonation; **v0.4.0** enrichment; **v0.3.0** inline decoders; **v0.2.0** opt-in
+traffic capture; **v0.1.0** the Foundation. See [`CHANGELOG.md`](CHANGELOG.md).
 
-> Note: TLS info requires a **blocking** `webRequest` listener (the one place we
-> rely on Firefox's MV3-retained blocking `webRequest`, per ADR 0001), so it adds
-> the `webRequestBlocking` permission and only works once the optional
-> `<all_urls>` host permission is granted (e.g. by enabling traffic capture).
+> Note: the native host is a separate program that runs local tools. It never
+> uses a shell (argument arrays only), runs only the three allowlisted tools on
+> validated inputs, and confines file access to its data directory.
 
 ## Requirements
 
@@ -96,10 +94,12 @@ Shared domain logic lives in `src/core/`:
   builders, all pure and unit-tested.
 - `core/analysis/` — the deterministic security-header analyzer and the TLS-info
   shape used by the DevTools panel.
+- `core/native/` — the native-messaging protocol types shared with the host.
 - `core/messaging/` — the typed request/response protocol and client.
 
 A DevTools page and panel (`src/devtools/`) provide per-page analysis; the
-background collects TLS info via `webRequest.getSecurityInfo`.
+background collects TLS info via `webRequest.getSecurityInfo`. The optional
+Python native host lives in [`native-host/`](native-host/).
 
 Persisted records carry a `schemaVersion`, so the on-disk shape can evolve
 across waves through explicit migrations rather than guesswork.
@@ -122,6 +122,7 @@ justified here and in the PR that introduced it.
 | `contextualIdentities`    | v0.5.0 | Create and remove throwaway containers for isolated detonation.                                                      |
 | `cookies`                 | v0.5.0 | Support clean-up of a throwaway container's cookies.                                                                 |
 | `downloads`               | v0.6.0 | Save an exported report/HAR/CSV/JSON file to disk.                                                                   |
+| `nativeMessaging`         | v0.8.0 | Talk to the optional `wadjet_host` native helper (archive, evidence, tools). Inert if the host is not installed.     |
 
 Enrichment is the **only** feature that sends anything off the machine: when you
 enrich an indicator, that indicator is sent to the provider whose key you
