@@ -1,0 +1,45 @@
+{
+  "name": "wadjet",
+  "version": "0.1.0",
+  "description": "Firefox WebExtension that turns the browser into a case-bound investigation console for security analysts.",
+  "private": true,
+  "type": "module",
+  "license": "MPL-2.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:watch": "node scripts/build.mjs --watch",
+    "clean": "node scripts/build.mjs --clean",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --check .",
+    "format:write": "prettier --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "ext:lint": "web-ext lint --source-dir dist",
+    "ext:run": "web-ext run --source-dir dist",
+    "check": "npm run typecheck && npm run lint && npm run format && npm run test && npm run build && npm run ext:lint"
+  },
+  "dependencies": {
+    "idb": "^8.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/firefox-webext-browser": "^120.0.4",
+    "@types/node": "^22.10.2",
+    "@vitest/coverage-v8": "^2.1.8",
+    "esbuild": "^0.24.2",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "fake-indexeddb": "^6.0.0",
+    "globals": "^15.14.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.1",
+    "vitest": "^2.1.8",
+    "web-ext": "^8.3.0"
+  }
+}
