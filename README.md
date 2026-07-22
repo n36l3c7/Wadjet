@@ -16,18 +16,16 @@ reimplement them. See [Non-goals](#non-goals).
 
 ## Status
 
-**v0.9.0 — Usability & codecs.** The inline overlay becomes an **editable
-conversion chain**: decode, encode, and defang/refang operations applied to the
-selection, any step removable (even mid-chain) or reorderable, recomputed each
-time. "Enrich selection" now shows results in an **in-page overlay**, and each
-provider card is **coloured by that provider's own severity** (clean / suspicious
-/ malicious — never an aggregate verdict). The sidebar's **Cases** and **Tools**
-sections are collapsible.
+**v1.0.0 — first release.** The full 0.x line, hardened: a permission audit, a
+documented [threat model](THREAT_MODEL.md), a security-review pass, a reviewed
+AMO data-collection declaration, and an automated signing/submission step in CI.
 
-Earlier waves: **v0.8.0** native host; **v0.7.0** DevTools panel; **v0.6.0**
-export; **v0.5.0** isolated detonation; **v0.4.0** enrichment; **v0.3.0** inline
-decoders; **v0.2.0** opt-in traffic capture; **v0.1.0** the Foundation. See
-[`CHANGELOG.md`](CHANGELOG.md).
+What Wadjet does: bind everything an analyst touches to a **case** — captured
+requests (redacted), inline **codec** conversions, on-demand **enrichment**,
+isolated **detonation**, per-page **DevTools** analysis — then **export** it
+(Markdown / HAR / CSV / JSON) or archive it via the optional **native host**.
+
+Delivered across waves v0.1.0–v0.9.0; see [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Requirements
 
@@ -129,10 +127,12 @@ telemetry is collected. Everything else stays local — case entries and binary
 evidence live in IndexedDB, captured traffic never leaves the browser, and
 sensitive headers are redacted before storage.
 
-> Note: the manifest still declares `data_collection_permissions: none`, which
-> describes Wadjet's own (absent) telemetry. Because enrichment forwards a
-> user-supplied indicator to a third-party API, the AMO data-collection
-> declaration should be revisited before a 1.0 store submission.
+Data-collection declaration: Wadjet requires **no** data collection
+(`data_collection_permissions.required: ["none"]`) — it runs no telemetry. Because
+enrichment forwards a user-supplied indicator to a third-party provider on
+explicit action, that egress is declared as **optional** data collection
+(`optional: ["websiteActivity"]`), so Firefox asks for consent when the feature
+is used. See the [threat model](THREAT_MODEL.md).
 
 ## Non-goals
 

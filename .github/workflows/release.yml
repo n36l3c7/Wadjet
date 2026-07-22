@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   release:
-    name: Build and publish the extension package
+    name: Build, publish, and (optionally) sign the extension
     runs-on: ubuntu-latest
 
     steps:
@@ -35,8 +35,28 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          prerelease=""
+          case "${GITHUB_REF_NAME}" in v0.*) prerelease="--prerelease" ;; esac
           gh release create "${GITHUB_REF_NAME}" web-ext-artifacts/*.zip \
-            --title "${GITHUB_REF_NAME}" \
-            --prerelease \
-            --generate-notes \
+            --title "${GITHUB_REF_NAME}" $prerelease --generate-notes \
           || gh release upload "${GITHUB_REF_NAME}" web-ext-artifacts/*.zip --clobber
+
+      # Signs/submits to AMO only when the AMO_JWT_ISSUER / AMO_JWT_SECRET repo
+      # secrets are set. Tolerant: never fails the release (a listed submission
+      # goes to review and may not return a signed file immediately).
+      - name: Sign / submit to AMO (if credentials are configured)
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -z "$AMO_JWT_ISSUER" ] || [ -z "$AMO_JWT_SECRET" ]; then
+            echo "AMO credentials not configured; skipping signing."
+            exit 0
+          fi
+          npx web-ext sign --source-dir dist --artifacts-dir web-ext-artifacts \
+            --channel listed --api-key "$AMO_JWT_ISSUER" --api-secret "$AMO_JWT_SECRET" \
+            --no-config-discovery \
+          || echo "web-ext sign returned non-zero (a listed submission may be pending review)."
+          xpi="$(ls web-ext-artifacts/*.xpi 2>/dev/null | head -1 || true)"
+          if [ -n "$xpi" ]; then gh release upload "${GITHUB_REF_NAME}" "$xpi" --clobber; fi

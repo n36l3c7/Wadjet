@@ -29,18 +29,18 @@ Out of scope for this project by design (these are non-goals, not gaps):
 - Acting as a proxy, scanner, or active testing tool.
 - Anti-detection / fingerprint-spoofing behaviour.
 
-## Design posture (v0.1.0)
+## Design posture
 
-- **Local only.** The Foundation wave performs no network requests and declares
-  `data_collection_permissions: none`. Case data never leaves the browser.
-- **Least privilege.** The manifest requests only `storage`. Every future
-  permission must be justified in its PR and documented in the README.
-- **No secrets in the repo or logs.** API keys (introduced when enrichment
-  arrives) will use a dedicated storage strategy, never source or logs.
-- **Untrusted input is validated at the boundary.** Persisted records and
-  inbound messages are checked before use; user-controlled strings are rendered
-  with `textContent`, never `innerHTML`.
+- **Local first.** The only outbound network path is on-demand enrichment, to the
+  provider whose key the analyst configured. Nothing is collected passively.
+- **Least privilege.** Permissions are minimum-viable per feature and justified in
+  the README; the broad `<all_urls>` host access is optional and user-granted.
+- **No secrets in the repo or logs.** Provider API keys live in the browser
+  profile, never in source, logs, or request URLs. Captured sensitive headers are
+  redacted at rest by default.
+- **Untrusted input is validated at the boundary.** Persisted records and inbound
+  messages are checked; user- and page-controlled strings are rendered with
+  `textContent`, never `innerHTML`. The native host runs only allowlisted tools
+  with argument arrays (no shell) on validated inputs.
 
-A full threat model of the extension is scheduled as an explicit deliverable and
-is tracked incrementally as sensitive data surfaces are added, rather than
-deferred wholesale to v1.0.0.
+The full threat model is maintained in [`THREAT_MODEL.md`](THREAT_MODEL.md).

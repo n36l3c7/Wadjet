@@ -8,6 +8,26 @@ During the `0.x` series, each wave maps to a minor version.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-07-23
+
+### Added
+
+- **Wave 10 — Hardening (first release).**
+- A documented threat model of the extension ([`THREAT_MODEL.md`](THREAT_MODEL.md)):
+  assets, trust boundaries, threats/mitigations, and accepted residual risks.
+- A reviewed AMO **data-collection declaration**: `required: ["none"]` (no
+  telemetry) with the enrichment egress declared as `optional: ["websiteActivity"]`,
+  so Firefox asks for consent when that feature is used.
+- An AMO **signing/submission** step in the release workflow, run automatically
+  when the `AMO_JWT_ISSUER` / `AMO_JWT_SECRET` repository secrets are configured.
+
+### Security
+
+- Security-review pass over the codebase: no `innerHTML` / `eval` /
+  `document.write` / `new Function`; the single `href` assignment is guarded to
+  `https://`; the native host uses no shell. Posture documented in
+  [`SECURITY.md`](SECURITY.md) and the threat model.
+
 ## [0.9.0] - 2026-07-23
 
 ### Added
@@ -190,7 +210,8 @@ During the `0.x` series, each wave maps to a minor version.
   `web-ext lint` on every push and pull request.
 - Documentation: README, CONTRIBUTING, and SECURITY.
 
-[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/n36l3c7/Wadjet/compare/v0.9.0...v1.0.0
 [0.9.0]: https://github.com/n36l3c7/Wadjet/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/n36l3c7/Wadjet/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/n36l3c7/Wadjet/compare/v0.6.0...v0.7.0

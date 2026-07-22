@@ -3,5 +3,5 @@
   "description": "Wadjet native host: SQLite case archive, filesystem evidence, and local tools.",
   "path": "REPLACE_WITH_ABSOLUTE_PATH_TO_LAUNCHER",
   "type": "stdio",
-  "allowed_extensions": ["wadjet@n36l3c7"]
+  "allowed_extensions": ["{d1e43b9f-a247-4a05-98e8-696b4ff6740b}"]
 }
