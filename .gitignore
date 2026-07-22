@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-types/
+*.zip
+*.xpi
+
+# Test / coverage
+coverage/
+.vitest/
+
+# web-ext
+web-ext-artifacts/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+*.log
+
+# Local environment / secrets (never commit)
+.env
+.env.*
+!.env.example
+
+# Local-only working files (kept on disk, not published)
+/CLAUDE.md
+/docs/

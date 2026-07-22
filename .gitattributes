@@ -1,0 +1,9 @@
+# Normalize line endings: store text as LF in the repository and check out LF,
+# regardless of the contributor's platform. Keeps CRLF from leaking in on Windows
+# and matches .editorconfig / Prettier.
+* text=auto eol=lf
+
+# Explicit binary types (never diffed or line-ending-converted).
+*.png binary
+*.xpi binary
+*.zip binary
