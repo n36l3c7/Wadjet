@@ -22,6 +22,7 @@ import type {
 } from '../core/case/types';
 import { sendRequest } from '../core/messaging/client';
 import type { CaptureState } from '../core/traffic/state';
+import { renderEnrichmentEntry, setupEnrichment } from './enrichment';
 
 const ALL_URLS = '<all_urls>';
 const PAGE_SIZE = 50;
@@ -239,6 +240,8 @@ function renderEntry(entry: CaseEntry): HTMLLIElement {
       return renderRequest(entry);
     case 'decoded-artifact':
       return renderDecoded(entry);
+    case 'enrichment':
+      return renderEnrichmentEntry(entry);
   }
 }
 
@@ -255,6 +258,9 @@ function matchesTextFilter(entry: CaseEntry): boolean {
       break;
     case 'decoded-artifact':
       haystack = `${entry.chain.join(' ')} ${entry.input} ${entry.output}`;
+      break;
+    case 'enrichment':
+      haystack = `${entry.indicator} ${entry.results.map((result) => result.summary).join(' ')}`;
       break;
   }
   return haystack.toLowerCase().includes(query);
@@ -444,7 +450,12 @@ ui.btnCaptureToggle.addEventListener('click', () => {
 ui.filterKind.addEventListener('change', () => {
   const value = ui.filterKind.value;
   state.kindFilter =
-    value === 'note' || value === 'request' || value === 'decoded-artifact' ? value : 'all';
+    value === 'note' ||
+    value === 'request' ||
+    value === 'decoded-artifact' ||
+    value === 'enrichment'
+      ? value
+      : 'all';
   if (state.activeCaseId !== null) {
     void run('filter', loadFirstPage(state.activeCaseId).then(renderTimeline));
   }
@@ -452,6 +463,13 @@ ui.filterKind.addEventListener('change', () => {
 
 ui.filterText.addEventListener('input', () => {
   renderTimeline();
+});
+
+setupEnrichment({
+  getActiveCaseId: () => state.activeCaseId,
+  onAttached: () => {
+    void run('enrichment attach', refresh());
+  },
 });
 
 void run('load', refresh());

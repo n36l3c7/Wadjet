@@ -16,17 +16,17 @@ reimplement them. See [Non-goals](#non-goals).
 
 ## Status
 
-**v0.3.0 — Inline decoders.** Adds a "Decode selection" context-menu item that
-opens an on-demand overlay next to the selection: it suggests likely encodings
-(base64, URL, hex, unicode, JWT) with a reason for each, decodes, **chains** one
-decoder onto another's output, and attaches the result to the active case as a
-decoded artifact. Decoding is deterministic and decode-only (no JWT signature
-verification); the overlay is injected on demand via `activeTab`, so decoding
-needs no broad host access.
+**v0.4.0 — Enrichment.** Adds on-demand lookup of a domain, IP, hash, or URL via
+a registry of independent providers (VirusTotal, AlienVault OTX, AbuseIPDB),
+each queried only when its API key is configured. Results are shown per provider
+— never merged into a single score — cached with a TTL, rate-limited per
+provider, and offline-safe. Enrich from a "Enrich selection" context-menu item
+or a field in the sidebar, and attach the result to the case. Keys live in
+`browser.storage.local` and each provider's host permission is requested only
+when you save its key.
 
-Earlier waves: **v0.2.0** opt-in traffic capture (redacted request metadata and
-headers on a filterable timeline); **v0.1.0** the Foundation (case model,
-storage, sidebar). See [`CHANGELOG.md`](CHANGELOG.md).
+Earlier waves: **v0.3.0** inline decoders; **v0.2.0** opt-in traffic capture;
+**v0.1.0** the Foundation. See [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Requirements
 
@@ -68,9 +68,11 @@ The extension has two runtime contexts today:
   presentation and wiring only.
 
 The background context also runs the non-blocking `webRequest` listeners that
-feed traffic capture and hosts the "Decode selection" context menu; the sidebar
-drives the capture toggle and the host-permission prompt. An overlay content
-script (`src/content/`) is injected on demand for inline decoding.
+feed traffic capture, hosts the "Decode selection" and "Enrich selection"
+context menus, and makes provider network calls; the sidebar drives the capture
+toggle, the host-permission prompts, provider keys, and enrichment lookups. An
+overlay content script (`src/content/`) is injected on demand for inline
+decoding.
 
 Shared domain logic lives in `src/core/`:
 
@@ -81,6 +83,10 @@ Shared domain logic lives in `src/core/`:
   record) and sensitive-header redaction, both pure and unit-tested.
 - `core/decode/` — deterministic decoders (base64, URL, hex, unicode, JWT) and
   rule-based encoding detection, both pure and unit-tested.
+- `core/enrich/` — indicator classification, the provider registry, a
+  token-bucket rate limiter, a TTL cache, and the enrichment orchestrator (all
+  injectable and unit-tested; the HTTP call is the only glue).
+- `core/settings/` — extension settings, including per-provider API keys.
 - `core/messaging/` — the typed request/response protocol and client.
 
 Persisted records carry a `schemaVersion`, so the on-disk shape can evolve
@@ -91,19 +97,27 @@ across waves through explicit migrations rather than guesswork.
 Wadjet requests the **minimum viable** permissions at every wave; each is
 justified here and in the PR that introduced it.
 
-| Permission              | Since  | Why                                                                                          |
-| ----------------------- | ------ | -------------------------------------------------------------------------------------------- |
-| `storage`               | v0.1.0 | Persist the case list and the active-case pointer locally.                                   |
-| `webRequest`            | v0.2.0 | Observe request metadata and headers for traffic capture (non-blocking; never intercepting). |
-| `<all_urls>` (optional) | v0.2.0 | Host access to capture across sites. **Optional** — requested only when you start capture.   |
-| `menus`                 | v0.3.0 | Add the "Decode selection" context-menu item.                                                |
-| `activeTab`             | v0.3.0 | Access the current tab to inject the decoder overlay, granted by the menu click.             |
-| `scripting`             | v0.3.0 | Inject the decoder overlay content script on demand.                                         |
+| Permission                | Since  | Why                                                                                                                  |
+| ------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------- |
+| `storage`                 | v0.1.0 | Persist the case list and the active-case pointer locally.                                                           |
+| `webRequest`              | v0.2.0 | Observe request metadata and headers for traffic capture (non-blocking; never intercepting).                         |
+| `<all_urls>` (optional)   | v0.2.0 | Host access to capture across sites. **Optional** — requested only when you start capture.                           |
+| `menus`                   | v0.3.0 | Add the "Decode selection" context-menu item.                                                                        |
+| `activeTab`               | v0.3.0 | Access the current tab to inject the decoder overlay, granted by the menu click.                                     |
+| `scripting`               | v0.3.0 | Inject the decoder overlay content script on demand.                                                                 |
+| provider hosts (optional) | v0.4.0 | Reach a provider's API for enrichment. **Optional** — each host is requested only when you save that provider's key. |
 
-Case entries and binary evidence are stored in IndexedDB, which requires no
-manifest permission. Wadjet makes **no network requests of its own** and
-transmits nothing; captured traffic stays local, sensitive headers are redacted
-before storage, and the extension declares `data_collection_permissions: none`.
+Enrichment is the **only** feature that sends anything off the machine: when you
+enrich an indicator, that indicator is sent to the provider whose key you
+configured (and nowhere else). Nothing is transmitted passively, and no
+telemetry is collected. Everything else stays local — case entries and binary
+evidence live in IndexedDB, captured traffic never leaves the browser, and
+sensitive headers are redacted before storage.
+
+> Note: the manifest still declares `data_collection_permissions: none`, which
+> describes Wadjet's own (absent) telemetry. Because enrichment forwards a
+> user-supplied indicator to a third-party API, the AMO data-collection
+> declaration should be revisited before a 1.0 store submission.
 
 ## Non-goals
 

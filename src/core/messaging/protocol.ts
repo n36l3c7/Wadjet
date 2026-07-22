@@ -11,7 +11,10 @@
  *
  * @module
  */
-import type { Case, DecodedArtifactEntry, NoteEntry } from '../case/types';
+import type { Case, DecodedArtifactEntry, EnrichmentEntry, NoteEntry } from '../case/types';
+import type { LookupOutcome } from '../enrich/service';
+import type { EnrichmentResult, ProviderId } from '../enrich/types';
+import type { SettingsView } from '../settings/store';
 import type { EntryPage, EntryQuery } from '../storage/types';
 import type { CaptureState } from '../traffic/state';
 
@@ -44,6 +47,18 @@ export interface RequestMap {
     result: CaptureState;
   };
   'capture.stop': { params: Record<string, never>; result: CaptureState };
+  'enrich.lookup': { params: { indicator: string }; result: LookupOutcome };
+  'enrich.settings': { params: Record<string, never>; result: SettingsView };
+  'enrich.setKey': { params: { provider: ProviderId; apiKey: string }; result: SettingsView };
+  'enrichment.add': {
+    params: {
+      caseId: string;
+      indicator: string;
+      indicatorType: string;
+      results: EnrichmentResult[];
+    };
+    result: EnrichmentEntry;
+  };
 }
 
 /** All valid request type discriminants. */

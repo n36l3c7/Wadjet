@@ -43,6 +43,24 @@
         </p>
       </section>
 
+      <section class="enrich" aria-label="Enrichment">
+        <h2 class="section__title">Enrichment</h2>
+        <div class="enrich__row">
+          <input
+            id="enrich-input"
+            class="enrich__input"
+            type="text"
+            placeholder="domain / IP / hash / URL"
+          />
+          <button type="button" id="btn-enrich" class="btn btn--primary">Enrich</button>
+        </div>
+        <div class="enrich__results" id="enrich-results"></div>
+        <details class="providers">
+          <summary class="providers__summary">Providers &amp; API keys</summary>
+          <div id="providers-list"></div>
+        </details>
+      </section>
+
       <section class="timeline" aria-label="Case timeline">
         <div class="timeline__head">
           <h2 class="section__title">Timeline</h2>
@@ -52,6 +70,7 @@
               <option value="note">Notes</option>
               <option value="request">Requests</option>
               <option value="decoded-artifact">Decoded</option>
+              <option value="enrichment">Enriched</option>
             </select>
             <input
               id="filter-text"

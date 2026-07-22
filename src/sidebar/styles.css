@@ -414,3 +414,156 @@ body {
   font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
   font-size: 0.7rem;
 }
+
+/* Enrichment */
+.enrich {
+  border-top: 1px solid var(--border);
+  padding-top: var(--gap);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.enrich__row {
+  display: flex;
+  gap: 6px;
+}
+
+.enrich__input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--text);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 8px;
+}
+
+.enrich__row .btn {
+  flex: 0 0 auto;
+}
+
+.enrich__results {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.enrich-results__head {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  word-break: break-all;
+}
+
+.enrich-card {
+  padding: 6px 8px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-left: 3px solid #7fbf7f;
+  border-radius: var(--radius);
+}
+
+.enrich-card__head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.enrich-card__provider {
+  font-weight: 600;
+  font-size: 0.72rem;
+  color: var(--accent);
+}
+
+.enrich-card__bad {
+  font-size: 0.68rem;
+  color: var(--danger);
+}
+
+.enrich-card__summary {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.76rem;
+}
+
+.enrich-fact {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+.enrich-fact__label {
+  color: var(--text-dim);
+}
+
+.enrich-link {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: var(--accent);
+}
+
+.enrich-error {
+  font-size: 0.76rem;
+  color: var(--danger);
+}
+
+.timeline-entry--enrichment {
+  border-left-color: #7fbf7f;
+  padding: 0;
+}
+
+.timeline-entry--enrichment > details {
+  padding: 8px 10px;
+}
+
+/* Provider settings */
+.providers {
+  margin-top: 4px;
+}
+
+.providers__summary {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.provider {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.provider__label {
+  font-size: 0.76rem;
+}
+
+.provider__status {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+}
+
+.provider__controls {
+  display: flex;
+  gap: 6px;
+}
+
+.provider__key {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.76rem;
+  color: var(--text);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 6px;
+}
+
+.provider__controls .btn {
+  flex: 0 0 auto;
+}

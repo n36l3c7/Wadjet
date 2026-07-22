@@ -8,7 +8,31 @@ During the `0.x` series, each wave maps to a minor version.
 
 ## [Unreleased]
 
-## [0.3.0] - 2026-07-22
+## [0.4.0] - 2026-07-22
+
+### Added
+
+- **Wave 4 — Enrichment.**
+- On-demand lookup of a domain, IP, hash, or URL across a registry of
+  independent providers — VirusTotal, AlienVault OTX, AbuseIPDB — each queried
+  only when its API key is configured. Results are shown per provider and never
+  merged into a single score.
+- Deterministic indicator classification; a per-provider token-bucket rate
+  limiter; a TTL cache of results; offline-safe behaviour (cache hits need no
+  network, and failures/rate-limits yield an explanation rather than throwing).
+- A new `enrichment` entry kind on the filterable timeline.
+- Provider API keys stored in `browser.storage.local` (never in the repo or
+  logs); the settings view reports only whether a key is set.
+- "Enrich selection" context menu (attaches to the active case) and a manual
+  enrichment field in the sidebar with a preview and "Add to case".
+- New optional per-provider host permissions, requested only when you save a
+  provider's key.
+
+### Note
+
+- Scope: the brief specified a single provider for this wave; by request it now
+  supports three independent providers gated on configured keys (no cross-
+  provider aggregation).
 
 ### Added
 
@@ -73,7 +97,8 @@ During the `0.x` series, each wave maps to a minor version.
   `web-ext lint` on every push and pull request.
 - Documentation: README, CONTRIBUTING, and SECURITY.
 
-[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/n36l3c7/Wadjet/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/n36l3c7/Wadjet/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/n36l3c7/Wadjet/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/n36l3c7/Wadjet/releases/tag/v0.1.0

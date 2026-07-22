@@ -7,6 +7,7 @@
  *
  * @module
  */
+import type { EnrichmentResult } from '../enrich/types';
 
 /**
  * Schema version of the case data model written by this build.
@@ -38,12 +39,12 @@ export interface Case {
 /**
  * Discriminant identifying the concrete shape of a {@link CaseEntry}.
  *
- * Wave 1 added `note`; Wave 2 added `request`; Wave 3 adds `decoded-artifact`.
- * Later waves extend this union further (`enrichment`, `screenshot`,
+ * Wave 1 added `note`; Wave 2 added `request`; Wave 3 added `decoded-artifact`;
+ * Wave 4 adds `enrichment`. Later waves extend this union further (`screenshot`,
  * `detonation`); the discriminated-union design keeps timeline, tagging and
  * export code agnostic to which kinds exist.
  */
-export type CaseEntryKind = 'note' | 'request' | 'decoded-artifact';
+export type CaseEntryKind = 'note' | 'request' | 'decoded-artifact' | 'enrichment';
 
 /** Fields shared by every entry, regardless of {@link CaseEntryKind}. */
 export interface CaseEntryBase {
@@ -140,7 +141,19 @@ export interface DecodedArtifactEntry extends CaseEntryBase {
 }
 
 /**
+ * On-demand enrichment of an indicator (domain, IP, hash, URL) from one or more
+ * providers. Results are stored per provider and never merged into a single
+ * score — Wadjet surfaces each provider's facts, it does not compute a verdict.
+ */
+export interface EnrichmentEntry extends CaseEntryBase {
+  readonly kind: 'enrichment';
+  readonly indicator: string;
+  readonly indicatorType: string;
+  readonly results: EnrichmentResult[];
+}
+
+/**
  * Any entry attached to a case. A discriminated union over {@link CaseEntryKind};
  * narrow on `kind` to reach kind-specific fields.
  */
-export type CaseEntry = NoteEntry | RequestEntry | DecodedArtifactEntry;
+export type CaseEntry = NoteEntry | RequestEntry | DecodedArtifactEntry | EnrichmentEntry;

@@ -1,20 +1,26 @@
 /**
  * Background coordinator.
  *
- * Owns the single {@link CaseService} and {@link TrafficCapture} instances and
- * answers typed requests from UI surfaces over `browser.runtime` messaging. This
- * is the only context that mutates the case model and the only one that runs the
- * `webRequest` listeners, which keeps persistence consistent.
+ * Owns the single instances of the case service, traffic capture, enrichment,
+ * and settings, and answers typed requests from UI surfaces over
+ * `browser.runtime` messaging. This is the only context that mutates the case
+ * model, runs the `webRequest` listeners, and makes provider network calls.
  *
  * @module
  */
 import { CaseService } from '../core/case/service';
+import { IdbEnrichmentCache } from '../core/enrich/cache';
+import { PROVIDERS } from '../core/enrich/providers';
+import { TokenBucket } from '../core/enrich/rate-limit';
+import { EnrichmentService } from '../core/enrich/service';
+import type { ProviderId } from '../core/enrich/types';
 import type { AnyRequest, Response, RequestType } from '../core/messaging/protocol';
+import { SettingsStore } from '../core/settings/store';
 import { openWadjetDb } from '../core/storage/database';
 import { IdbContentStore } from '../core/storage/content-store';
 import { LocalMetadataStore } from '../core/storage/metadata-store';
 import type { KeyValueArea } from '../core/storage/types';
-import { registerDecoderMenu } from './decoder-menu';
+import { registerContextMenus } from './context-menus';
 import { TrafficCapture } from './traffic-capture';
 
 /** Adapt `browser.storage.local` to the minimal {@link KeyValueArea} shape. */
@@ -26,14 +32,38 @@ function createKeyValueArea(): KeyValueArea {
   };
 }
 
+function hasHostPermission(origin: string): Promise<boolean> {
+  return browser.permissions.contains({ origins: [origin] });
+}
+
+async function fetchJson(
+  url: string,
+  headers: Record<string, string>,
+): Promise<{ status: number; body: unknown }> {
+  const response = await fetch(url, { method: 'GET', headers });
+  const body = (await response.json().catch(() => null)) as unknown;
+  return { status: response.status, body };
+}
+
+/** Conservative per-provider rate limits (well within free tiers). */
+function createRateLimiters(): Map<ProviderId, TokenBucket> {
+  return new Map<ProviderId, TokenBucket>([
+    ['virustotal', new TokenBucket({ capacity: 4, refillPerMinute: 4 })],
+    ['otx', new TokenBucket({ capacity: 10, refillPerMinute: 10 })],
+    ['abuseipdb', new TokenBucket({ capacity: 5, refillPerMinute: 5 })],
+  ]);
+}
+
 interface BackgroundContext {
   readonly service: CaseService;
   readonly capture: TrafficCapture;
+  readonly enrichment: EnrichmentService;
+  readonly settings: SettingsStore;
 }
 
 let contextPromise: Promise<BackgroundContext> | null = null;
 
-/** Lazily build the case service and traffic capture (opening IndexedDB once). */
+/** Lazily build all background services (opening IndexedDB once). */
 function getContext(): Promise<BackgroundContext> {
   contextPromise ??= (async (): Promise<BackgroundContext> => {
     const db = await openWadjetDb();
@@ -47,9 +77,40 @@ function getContext(): Promise<BackgroundContext> {
       onCaptured: (caseId, captured) => service.addRequest(caseId, captured).then(() => undefined),
     });
     await capture.init();
-    return { service, capture };
+    const settings = new SettingsStore(area);
+    const rateLimiters = createRateLimiters();
+    const fallbackBucket = new TokenBucket({ capacity: 5, refillPerMinute: 5 });
+    const enrichment = new EnrichmentService({
+      providers: PROVIDERS,
+      cache: new IdbEnrichmentCache(db),
+      getApiKey: (id) => settings.getApiKey(id),
+      hasPermission: hasHostPermission,
+      fetchJson,
+      rateLimiterFor: (id) => rateLimiters.get(id) ?? fallbackBucket,
+    });
+    return { service, capture, enrichment, settings };
   })();
   return contextPromise;
+}
+
+/** Enrich a selection (from the context menu) and attach it to the active case. */
+async function enrichSelection(selectionText: string): Promise<void> {
+  const { service, enrichment } = await getContext();
+  const active = await service.getActiveCase();
+  if (active === undefined) {
+    console.info('[wadjet] enrich: no active case to attach to.');
+    return;
+  }
+  const outcome = await enrichment.lookup(selectionText);
+  if (outcome.indicatorType === null || outcome.results.length === 0) {
+    console.info('[wadjet] enrich: nothing to attach (unclassifiable or no providers configured).');
+    return;
+  }
+  await service.addEnrichment(active.id, {
+    indicator: outcome.indicator,
+    indicatorType: outcome.indicatorType,
+    results: outcome.results,
+  });
 }
 
 /** Structural guard for inbound messages. */
@@ -63,9 +124,9 @@ function isAnyRequest(value: unknown): value is AnyRequest {
   );
 }
 
-/** Route a validated request to the case service or traffic capture. */
+/** Route a validated request to the appropriate service. */
 async function dispatch(req: AnyRequest): Promise<Response<RequestType>> {
-  const { service, capture } = await getContext();
+  const { service, capture, enrichment, settings } = await getContext();
   switch (req.type) {
     case 'case.list':
       return { ok: true, data: await service.listCases() };
@@ -106,6 +167,22 @@ async function dispatch(req: AnyRequest): Promise<Response<RequestType>> {
       };
     case 'capture.stop':
       return { ok: true, data: await capture.stop() };
+    case 'enrich.lookup':
+      return { ok: true, data: await enrichment.lookup(req.params.indicator) };
+    case 'enrich.settings':
+      return { ok: true, data: await settings.view(hasHostPermission) };
+    case 'enrich.setKey':
+      await settings.setApiKey(req.params.provider, req.params.apiKey);
+      return { ok: true, data: await settings.view(hasHostPermission) };
+    case 'enrichment.add':
+      return {
+        ok: true,
+        data: await service.addEnrichment(req.params.caseId, {
+          indicator: req.params.indicator,
+          indicatorType: req.params.indicatorType,
+          results: req.params.results,
+        }),
+      };
     default:
       return { ok: false, error: `Unknown request type: ${String((req as AnyRequest).type)}` };
   }
@@ -121,8 +198,14 @@ browser.runtime.onMessage.addListener((message: unknown): Promise<Response<Reque
   }));
 });
 
-// Register the decoder context menu (its click handler injects the overlay).
-registerDecoderMenu();
+// Register the selection context menus (decode overlay + enrich).
+registerContextMenus({
+  onEnrich: (selectionText) => {
+    void enrichSelection(selectionText).catch((error: unknown) => {
+      console.error('[wadjet] enrich selection failed:', error);
+    });
+  },
+});
 
 // Build the context on startup so capture is restored if it was left enabled.
 void getContext().catch((error: unknown) => {

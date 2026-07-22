@@ -6,17 +6,19 @@
  * - `entries` — {@link CaseEntry} records keyed by `id`, with a compound index
  *   `[caseId, timestamp]` for time-ordered retrieval per case.
  * - `blobs` — content-addressed binary payloads keyed by SHA-256 hash.
+ * - `enrichment_cache` — cached provider results keyed by `provider:indicator`.
  *
  * @module
  */
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { CaseEntry } from '../case/types';
+import type { EnrichmentResult } from '../enrich/types';
 
 /** IndexedDB database name. */
 export const DB_NAME = 'wadjet';
 
 /** IndexedDB schema version; bump when the object-store layout changes. */
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 
 /** A binary payload as persisted in the `blobs` object store. */
 export interface StoredBlob {
@@ -24,6 +26,15 @@ export interface StoredBlob {
   readonly mediaType: string;
   readonly byteLength: number;
   readonly data: ArrayBuffer;
+}
+
+/** A cached enrichment result with its expiry. */
+export interface CachedEnrichment {
+  /** Cache key: `${provider}:${indicator}`. */
+  readonly key: string;
+  readonly result: EnrichmentResult;
+  /** Epoch milliseconds after which the entry is stale. */
+  readonly expiresAt: number;
 }
 
 /** Typed IndexedDB schema for the Wadjet database. */
@@ -36,6 +47,10 @@ export interface WadjetDBSchema extends DBSchema {
   blobs: {
     key: string;
     value: StoredBlob;
+  };
+  enrichment_cache: {
+    key: string;
+    value: CachedEnrichment;
   };
 }
 
@@ -59,6 +74,9 @@ export function openWadjetDb(): Promise<WadjetDB> {
       }
       if (!db.objectStoreNames.contains('blobs')) {
         db.createObjectStore('blobs', { keyPath: 'hash' });
+      }
+      if (!db.objectStoreNames.contains('enrichment_cache')) {
+        db.createObjectStore('enrichment_cache', { keyPath: 'key' });
       }
     },
   });

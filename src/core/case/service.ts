@@ -9,6 +9,7 @@
  *
  * @module
  */
+import type { EnrichmentResult } from '../enrich/types';
 import type { ContentStore, EntryPage, EntryQuery, MetadataStore } from '../storage/types';
 import type { CapturedRequest } from '../traffic/request-tracker';
 import { normalizeTags } from './tags';
@@ -17,6 +18,7 @@ import {
   type Case,
   type CaseEntry,
   type DecodedArtifactEntry,
+  type EnrichmentEntry,
   type NoteEntry,
   type RequestEntry,
 } from './types';
@@ -241,6 +243,33 @@ export class CaseService {
       output: output.value,
       sourceUrl: params.sourceUrl,
       truncated: input.truncated || output.truncated,
+    };
+    await this.#content.addEntry(entry);
+    return entry;
+  }
+
+  /**
+   * Persist an enrichment result set against an open case.
+   *
+   * @throws {CaseNotFoundError} If the case does not exist.
+   * @throws {CaseClosedError} If the case is closed.
+   * @throws {EmptyValueError} If there are no results to record.
+   */
+  async addEnrichment(
+    caseId: string,
+    params: { indicator: string; indicatorType: string; results: readonly EnrichmentResult[] },
+  ): Promise<EnrichmentEntry> {
+    const target = await this.#requireOpenCase(caseId);
+    if (params.results.length === 0) throw new EmptyValueError('Enrichment results');
+    const entry: EnrichmentEntry = {
+      id: this.#newId(),
+      caseId: target.id,
+      kind: 'enrichment',
+      timestamp: this.#now(),
+      tags: [],
+      indicator: params.indicator,
+      indicatorType: params.indicatorType,
+      results: [...params.results],
     };
     await this.#content.addEntry(entry);
     return entry;

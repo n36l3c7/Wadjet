@@ -9,6 +9,7 @@ import {
   CASE_SCHEMA_VERSION,
   type Case,
   type DecodedArtifactEntry,
+  type EnrichmentEntry,
   type NoteEntry,
   type RequestEntry,
 } from '../../src/core/case/types';
@@ -155,5 +156,42 @@ describe('isCaseEntry (decoded-artifact)', () => {
   it('rejects a missing output', () => {
     const { output: _output, ...withoutOutput } = validDecoded;
     expect(isCaseEntry(withoutOutput)).toBe(false);
+  });
+});
+
+const validEnrichment: EnrichmentEntry = {
+  id: 'x1',
+  caseId: 'c1',
+  kind: 'enrichment',
+  timestamp: 1000,
+  tags: [],
+  indicator: 'example.com',
+  indicatorType: 'domain',
+  results: [
+    {
+      provider: 'virustotal',
+      indicator: 'example.com',
+      indicatorType: 'domain',
+      fetchedAt: 1000,
+      ok: true,
+      summary: '0/90 engines flagged malicious.',
+      facts: [{ label: 'Malicious', value: '0 / 90' }],
+      link: 'https://www.virustotal.com/gui/domain/example.com',
+    },
+  ],
+};
+
+describe('isCaseEntry (enrichment)', () => {
+  it('accepts a well-formed enrichment', () => {
+    expect(isCaseEntry(validEnrichment)).toBe(true);
+  });
+
+  it('rejects malformed results', () => {
+    expect(isCaseEntry({ ...validEnrichment, results: [{ provider: 'virustotal' }] })).toBe(false);
+  });
+
+  it('rejects a missing indicator', () => {
+    const { indicator: _indicator, ...withoutIndicator } = validEnrichment;
+    expect(isCaseEntry(withoutIndicator)).toBe(false);
   });
 });

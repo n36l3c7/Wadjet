@@ -8,8 +8,22 @@ import {
 } from '../../src/core/case/service';
 import { CASE_SCHEMA_VERSION } from '../../src/core/case/types';
 import { LocalMetadataStore } from '../../src/core/storage/metadata-store';
+import type { EnrichmentResult } from '../../src/core/enrich/types';
 import type { CapturedRequest } from '../../src/core/traffic/request-tracker';
 import { InMemoryContentStore, InMemoryKeyValueArea, sequentialIds, steppingClock } from '../fakes';
+
+function enrichmentResult(): EnrichmentResult {
+  return {
+    provider: 'virustotal',
+    indicator: 'example.com',
+    indicatorType: 'domain',
+    fetchedAt: 1000,
+    ok: true,
+    summary: '0/90 engines flagged malicious.',
+    facts: [],
+    link: null,
+  };
+}
 
 function capturedRequest(overrides: Partial<CapturedRequest> = {}): CapturedRequest {
   return {
@@ -246,5 +260,44 @@ describe('CaseService — decoded artifacts', () => {
     expect(entry.input.length).toBe(MAX_ARTIFACT_FIELD_CHARS);
     expect(entry.output.length).toBe(MAX_ARTIFACT_FIELD_CHARS);
     expect(entry.truncated).toBe(true);
+  });
+});
+
+describe('CaseService — enrichment', () => {
+  let service: CaseService;
+
+  beforeEach(() => {
+    service = makeService();
+  });
+
+  it('adds enrichment results to an open case', async () => {
+    const created = await service.createCase('enrich');
+    const entry = await service.addEnrichment(created.id, {
+      indicator: 'example.com',
+      indicatorType: 'domain',
+      results: [enrichmentResult()],
+    });
+    expect(entry.kind).toBe('enrichment');
+    expect(entry.indicator).toBe('example.com');
+    expect(entry.results).toHaveLength(1);
+  });
+
+  it('rejects an empty result set', async () => {
+    const created = await service.createCase('enrich');
+    await expect(
+      service.addEnrichment(created.id, { indicator: 'x', indicatorType: 'domain', results: [] }),
+    ).rejects.toBeInstanceOf(EmptyValueError);
+  });
+
+  it('refuses a closed case', async () => {
+    const created = await service.createCase('enrich');
+    await service.closeCase(created.id);
+    await expect(
+      service.addEnrichment(created.id, {
+        indicator: 'x',
+        indicatorType: 'domain',
+        results: [enrichmentResult()],
+      }),
+    ).rejects.toBeInstanceOf(CaseClosedError);
   });
 });

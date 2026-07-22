@@ -17,7 +17,7 @@ import {
 } from './types';
 
 const CASE_STATUSES: readonly CaseStatus[] = ['open', 'closed'];
-const ENTRY_KINDS: readonly CaseEntryKind[] = ['note', 'request', 'decoded-artifact'];
+const ENTRY_KINDS: readonly CaseEntryKind[] = ['note', 'request', 'decoded-artifact', 'enrichment'];
 const REQUEST_OUTCOMES = ['completed', 'error'] as const;
 
 /** Thrown when persisted data was written by an unsupported schema version. */
@@ -86,6 +86,29 @@ function isRequestTimings(value: unknown): boolean {
   );
 }
 
+function isEnrichmentResult(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.provider === 'string' &&
+    typeof value.indicator === 'string' &&
+    typeof value.indicatorType === 'string' &&
+    typeof value.fetchedAt === 'number' &&
+    typeof value.ok === 'boolean' &&
+    typeof value.summary === 'string' &&
+    Array.isArray(value.facts) &&
+    (value.link === null || typeof value.link === 'string')
+  );
+}
+
+function isEnrichmentShape(value: Record<string, unknown>): boolean {
+  return (
+    typeof value.indicator === 'string' &&
+    typeof value.indicatorType === 'string' &&
+    Array.isArray(value.results) &&
+    value.results.every(isEnrichmentResult)
+  );
+}
+
 function isDecodedArtifactShape(value: Record<string, unknown>): boolean {
   return (
     typeof value.input === 'string' &&
@@ -150,6 +173,8 @@ export function isCaseEntry(value: unknown): value is CaseEntry {
       return isRequestEntryShape(value);
     case 'decoded-artifact':
       return isDecodedArtifactShape(value);
+    case 'enrichment':
+      return isEnrichmentShape(value);
     default:
       return false;
   }
