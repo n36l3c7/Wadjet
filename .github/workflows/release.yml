@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish the extension package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Package with web-ext
+        run: npx web-ext build --source-dir dist --artifacts-dir web-ext-artifacts --overwrite-dest --no-config-discovery
+
+      - name: Publish GitHub release with the packaged extension
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" web-ext-artifacts/*.zip \
+            --title "${GITHUB_REF_NAME}" \
+            --prerelease \
+            --generate-notes \
+          || gh release upload "${GITHUB_REF_NAME}" web-ext-artifacts/*.zip --clobber
