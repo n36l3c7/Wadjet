@@ -38,12 +38,12 @@ export interface Case {
 /**
  * Discriminant identifying the concrete shape of a {@link CaseEntry}.
  *
- * Wave 1 produces only `note` entries. Later waves extend this union
- * (`request`, `decoded-artifact`, `enrichment`, `screenshot`, `detonation`);
- * the discriminated-union design keeps timeline, tagging and export code
- * agnostic to which kinds exist.
+ * Wave 1 added `note`; Wave 2 adds `request`. Later waves extend this union
+ * further (`decoded-artifact`, `enrichment`, `screenshot`, `detonation`); the
+ * discriminated-union design keeps timeline, tagging and export code agnostic to
+ * which kinds exist.
  */
-export type CaseEntryKind = 'note';
+export type CaseEntryKind = 'note' | 'request';
 
 /** Fields shared by every entry, regardless of {@link CaseEntryKind}. */
 export interface CaseEntryBase {
@@ -63,7 +63,64 @@ export interface NoteEntry extends CaseEntryBase {
 }
 
 /**
+ * A single HTTP header. When {@link redacted} is true, {@link value} holds a
+ * placeholder rather than the original: sensitive values are masked at capture
+ * time and never persisted in the clear (see the traffic redaction module).
+ */
+export interface HttpHeader {
+  readonly name: string;
+  readonly value: string;
+  readonly redacted: boolean;
+}
+
+/** One hop in an HTTP redirect chain. */
+export interface RedirectHop {
+  readonly fromUrl: string;
+  readonly toUrl: string;
+  readonly statusCode: number | null;
+  /** Epoch milliseconds when the redirect was observed. */
+  readonly timestamp: number;
+}
+
+/** Coarse timing markers for a captured request (epoch milliseconds). */
+export interface RequestTimings {
+  readonly startedAt: number;
+  readonly responseStartedAt: number | null;
+  readonly completedAt: number | null;
+}
+
+/** How a captured request ended. */
+export type RequestOutcome = 'completed' | 'error';
+
+/**
+ * A single HTTP(S) request observed by traffic capture and bound to a case.
+ *
+ * Bodies are intentionally absent in this schema — Wave 2 captures metadata and
+ * headers only. Header values that match the sensitive-header denylist are
+ * redacted before persistence unless the capturing session explicitly opted to
+ * retain them ({@link sensitiveRetained}).
+ */
+export interface RequestEntry extends CaseEntryBase {
+  readonly kind: 'request';
+  readonly method: string;
+  readonly url: string;
+  /** WebExtension resource type (e.g. `main_frame`, `xmlhttprequest`). */
+  readonly resourceType: string;
+  readonly statusCode: number | null;
+  readonly fromCache: boolean;
+  readonly remoteIp: string | null;
+  readonly requestHeaders: HttpHeader[];
+  readonly responseHeaders: HttpHeader[];
+  readonly redirectChain: RedirectHop[];
+  readonly timings: RequestTimings;
+  readonly outcome: RequestOutcome;
+  readonly error: string | null;
+  /** True when sensitive header values were kept raw by explicit opt-in. */
+  readonly sensitiveRetained: boolean;
+}
+
+/**
  * Any entry attached to a case. A discriminated union over {@link CaseEntryKind};
  * narrow on `kind` to reach kind-specific fields.
  */
-export type CaseEntry = NoteEntry;
+export type CaseEntry = NoteEntry | RequestEntry;

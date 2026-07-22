@@ -16,11 +16,14 @@ reimplement them. See [Non-goals](#non-goals).
 
 ## Status
 
-**v0.1.0 — Foundation.** This wave establishes the skeleton: build pipeline,
-manifest, storage layer, and the case model (create / open / close a case, add
-timestamped note entries with tags, view the timeline in the sidebar). It does
-not capture traffic, decode payloads, or reach the network — those arrive in
-later waves. See [`CHANGELOG.md`](CHANGELOG.md).
+**v0.2.0 — Traffic capture.** Building on the Foundation, this wave adds
+opt-in capture of HTTP(S) requests bound to the active case: method, URL,
+status, timings, redirect chains, and request/response headers, shown on a
+filterable, paginated timeline in the sidebar. Capture is non-blocking
+observation only (never interception), needs a one-time host permission granted
+when you start it, and redacts sensitive headers (`Authorization`, `Cookie`,
+tokens, …) before they are stored. Request/response **bodies** are not captured.
+See [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Requirements
 
@@ -61,11 +64,17 @@ The extension has two runtime contexts today:
 - **Sidebar** (`src/sidebar/`) — a thin view over the typed message protocol;
   presentation and wiring only.
 
+The background context also runs the non-blocking `webRequest` listeners that
+feed traffic capture; the sidebar drives the capture toggle and the host-
+permission prompt.
+
 Shared domain logic lives in `src/core/`:
 
 - `core/case/` — the case model: types, schema/version guards, and the service.
 - `core/storage/` — a hybrid persistence layer: `browser.storage.local` for
   case metadata, IndexedDB for the entry stream and content-addressed blobs.
+- `core/traffic/` — request correlation (assembling `webRequest` events into one
+  record) and sensitive-header redaction, both pure and unit-tested.
 - `core/messaging/` — the typed request/response protocol and client.
 
 Persisted records carry a `schemaVersion`, so the on-disk shape can evolve
@@ -76,13 +85,16 @@ across waves through explicit migrations rather than guesswork.
 Wadjet requests the **minimum viable** permissions at every wave; each is
 justified here and in the PR that introduced it.
 
-| Permission | Since  | Why                                                        |
-| ---------- | ------ | ---------------------------------------------------------- |
-| `storage`  | v0.1.0 | Persist the case list and the active-case pointer locally. |
+| Permission              | Since  | Why                                                                                          |
+| ----------------------- | ------ | -------------------------------------------------------------------------------------------- |
+| `storage`               | v0.1.0 | Persist the case list and the active-case pointer locally.                                   |
+| `webRequest`            | v0.2.0 | Observe request metadata and headers for traffic capture (non-blocking; never intercepting). |
+| `<all_urls>` (optional) | v0.2.0 | Host access to capture across sites. **Optional** — requested only when you start capture.   |
 
 Case entries and binary evidence are stored in IndexedDB, which requires no
-manifest permission. Wadjet performs **no network requests** and declares
-`data_collection_permissions: none` — it neither collects nor transmits data.
+manifest permission. Wadjet makes **no network requests of its own** and
+transmits nothing; captured traffic stays local, sensitive headers are redacted
+before storage, and the extension declares `data_collection_permissions: none`.
 
 ## Non-goals
 

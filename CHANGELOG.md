@@ -8,6 +8,29 @@ During the `0.x` series, each wave maps to a minor version.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-22
+
+### Added
+
+- **Wave 2 — Traffic capture.**
+- Opt-in capture of HTTP(S) requests bound to the active case, via non-blocking
+  `webRequest` observation (never interception). Records method, URL, resource
+  type, status, timings, redirect chain, request/response headers, remote IP,
+  cache flag, and errors as a new `request` entry kind. Bodies are not captured.
+- Sensitive-header redaction at capture time, driven by a versioned, editable
+  denylist data file. Redact-by-default with an explicit per-session opt-in to
+  retain raw values; fails loud (masks everything) if the denylist is unusable.
+- A start/stop capture toggle in the sidebar that requests the optional
+  `<all_urls>` host permission on first use and binds capture to one case.
+- A filterable (by kind and free text), paginated timeline that renders notes
+  and captured requests, with expandable request details.
+- New permissions: `webRequest` (required) and `<all_urls>` (optional).
+
+### Changed
+
+- The content store gains a newest-first, kind-filtered, cursor-paginated
+  `queryEntries`; the sidebar timeline uses it instead of loading everything.
+
 ## [0.1.0] - 2026-07-22
 
 ### Added
@@ -32,5 +55,6 @@ During the `0.x` series, each wave maps to a minor version.
   `web-ext lint` on every push and pull request.
 - Documentation: README, CONTRIBUTING, and SECURITY.
 
-[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/n36l3c7/Wadjet/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/n36l3c7/Wadjet/releases/tag/v0.1.0

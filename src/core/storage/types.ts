@@ -15,7 +15,7 @@
  *
  * @module
  */
-import type { Case, CaseEntry } from '../case/types';
+import type { Case, CaseEntry, CaseEntryKind } from '../case/types';
 
 /**
  * Minimal key/value surface satisfied by `browser.storage.local`.
@@ -45,12 +45,37 @@ export interface MetadataStore {
   setActiveCaseId(id: string | null): Promise<void>;
 }
 
+/**
+ * A reverse-chronological, optionally kind-filtered page query over a case's
+ * entries. Pagination uses a timestamp cursor rather than an offset so that
+ * appends during browsing do not shift the page boundary.
+ */
+export interface EntryQuery {
+  /** Restrict to these kinds; empty/absent means all kinds. */
+  readonly kinds?: readonly CaseEntryKind[] | null;
+  /** Maximum number of entries to return. */
+  readonly limit: number;
+  /** Return entries strictly older than this timestamp (the page cursor). */
+  readonly before?: number | null;
+}
+
+/** A single page of entries, newest first. */
+export interface EntryPage {
+  readonly entries: CaseEntry[];
+  /** True if matching entries older than this page exist. */
+  readonly hasMore: boolean;
+  /** Cursor for the next (older) page, or null when exhausted. */
+  readonly nextBefore: number | null;
+}
+
 /** Persists the time-ordered stream of case entries. */
 export interface ContentStore {
   /** Append an entry. */
   addEntry(entry: CaseEntry): Promise<void>;
   /** All entries for a case, ordered by ascending timestamp. */
   listEntries(caseId: string): Promise<CaseEntry[]>;
+  /** A newest-first, kind-filtered, paginated page of a case's entries. */
+  queryEntries(caseId: string, query: EntryQuery): Promise<EntryPage>;
   /** Remove every entry belonging to a case. */
   deleteEntriesForCase(caseId: string): Promise<void>;
 }

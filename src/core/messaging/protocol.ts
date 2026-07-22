@@ -11,7 +11,9 @@
  *
  * @module
  */
-import type { Case, CaseEntry, NoteEntry } from '../case/types';
+import type { Case, NoteEntry } from '../case/types';
+import type { EntryPage, EntryQuery } from '../storage/types';
+import type { CaptureState } from '../traffic/state';
 
 /**
  * The full set of request types with their parameter and result shapes. Adding
@@ -24,8 +26,14 @@ export interface RequestMap {
   'case.create': { params: { name: string }; result: Case };
   'case.open': { params: { id: string }; result: Case };
   'case.close': { params: { id: string }; result: Case };
-  'case.timeline': { params: { caseId: string }; result: CaseEntry[] };
+  'case.entries': { params: { caseId: string; query: EntryQuery }; result: EntryPage };
   'note.add': { params: { caseId: string; text: string; tags: string[] }; result: NoteEntry };
+  'capture.getState': { params: Record<string, never>; result: CaptureState };
+  'capture.start': {
+    params: { caseId: string; retainSensitive: boolean };
+    result: CaptureState;
+  };
+  'capture.stop': { params: Record<string, never>; result: CaptureState };
 }
 
 /** All valid request type discriminants. */

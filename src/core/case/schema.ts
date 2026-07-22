@@ -17,7 +17,8 @@ import {
 } from './types';
 
 const CASE_STATUSES: readonly CaseStatus[] = ['open', 'closed'];
-const ENTRY_KINDS: readonly CaseEntryKind[] = ['note'];
+const ENTRY_KINDS: readonly CaseEntryKind[] = ['note', 'request'];
+const REQUEST_OUTCOMES = ['completed', 'error'] as const;
 
 /** Thrown when persisted data was written by an unsupported schema version. */
 export class SchemaVersionError extends Error {
@@ -47,6 +48,60 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === 'string');
+}
+
+function isHttpHeaderArray(value: unknown): boolean {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (item) =>
+        isRecord(item) &&
+        typeof item.name === 'string' &&
+        typeof item.value === 'string' &&
+        typeof item.redacted === 'boolean',
+    )
+  );
+}
+
+function isRedirectHopArray(value: unknown): boolean {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (item) =>
+        isRecord(item) &&
+        typeof item.fromUrl === 'string' &&
+        typeof item.toUrl === 'string' &&
+        (item.statusCode === null || typeof item.statusCode === 'number') &&
+        typeof item.timestamp === 'number',
+    )
+  );
+}
+
+function isRequestTimings(value: unknown): boolean {
+  return (
+    isRecord(value) &&
+    typeof value.startedAt === 'number' &&
+    (value.responseStartedAt === null || typeof value.responseStartedAt === 'number') &&
+    (value.completedAt === null || typeof value.completedAt === 'number')
+  );
+}
+
+function isRequestEntryShape(value: Record<string, unknown>): boolean {
+  return (
+    typeof value.method === 'string' &&
+    typeof value.url === 'string' &&
+    typeof value.resourceType === 'string' &&
+    (value.statusCode === null || typeof value.statusCode === 'number') &&
+    typeof value.fromCache === 'boolean' &&
+    (value.remoteIp === null || typeof value.remoteIp === 'string') &&
+    isHttpHeaderArray(value.requestHeaders) &&
+    isHttpHeaderArray(value.responseHeaders) &&
+    isRedirectHopArray(value.redirectChain) &&
+    isRequestTimings(value.timings) &&
+    REQUEST_OUTCOMES.includes(value.outcome as (typeof REQUEST_OUTCOMES)[number]) &&
+    (value.error === null || typeof value.error === 'string') &&
+    typeof value.sensitiveRetained === 'boolean'
+  );
 }
 
 /** Type guard: is `value` a well-formed {@link Case}? */
@@ -81,6 +136,8 @@ export function isCaseEntry(value: unknown): value is CaseEntry {
   switch (value.kind as CaseEntryKind) {
     case 'note':
       return typeof value.text === 'string';
+    case 'request':
+      return isRequestEntryShape(value);
     default:
       return false;
   }

@@ -5,7 +5,7 @@
  * `browser` API.
  */
 import type { CaseEntry } from '../src/core/case/types';
-import type { ContentStore, KeyValueArea } from '../src/core/storage/types';
+import type { ContentStore, EntryPage, EntryQuery, KeyValueArea } from '../src/core/storage/types';
 
 /** In-memory {@link KeyValueArea} mimicking `browser.storage.local` semantics. */
 export class InMemoryKeyValueArea implements KeyValueArea {
@@ -54,6 +54,23 @@ export class InMemoryContentStore implements ContentStore {
       .sort((a, b) => a.timestamp - b.timestamp)
       .map((entry) => structuredClone(entry));
     return Promise.resolve(result);
+  }
+
+  queryEntries(caseId: string, query: EntryQuery): Promise<EntryPage> {
+    const kinds = query.kinds && query.kinds.length > 0 ? new Set(query.kinds) : null;
+    const before = query.before ?? null;
+    const limit = Math.max(1, query.limit);
+
+    const matching = this.#entries
+      .filter((entry) => entry.caseId === caseId)
+      .filter((entry) => (kinds ? kinds.has(entry.kind) : true))
+      .filter((entry) => (before === null ? true : entry.timestamp < before))
+      .sort((a, b) => b.timestamp - a.timestamp);
+
+    const entries = matching.slice(0, limit).map((entry) => structuredClone(entry));
+    const hasMore = matching.length > limit;
+    const nextBefore = hasMore ? (entries.at(-1)?.timestamp ?? null) : null;
+    return Promise.resolve({ entries, hasMore, nextBefore });
   }
 
   deleteEntriesForCase(caseId: string): Promise<void> {

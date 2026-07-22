@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "headers": [
+    "authorization",
+    "proxy-authorization",
+    "www-authenticate",
+    "proxy-authenticate",
+    "cookie",
+    "set-cookie",
+    "authentication",
+    "x-api-key",
+    "api-key",
+    "x-auth-token",
+    "x-access-token",
+    "x-session-token",
+    "x-amz-security-token",
+    "x-csrf-token",
+    "x-xsrf-token"
+  ]
+}

@@ -219,3 +219,174 @@ body {
   color: var(--text-dim);
   font-style: italic;
 }
+
+/* Traffic capture control */
+.capture {
+  border-top: 1px solid var(--border);
+  padding-top: var(--gap);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.capture__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.capture__row .btn {
+  flex: 0 0 auto;
+}
+
+.capture__status {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.capture__status--on {
+  color: var(--accent);
+}
+
+.capture__retain {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.capture__hint {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+/* Timeline filters */
+.timeline__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.timeline__filters {
+  display: flex;
+  gap: 6px;
+}
+
+.filter-kind,
+.filter-text {
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--text);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 3px 6px;
+}
+
+.filter-text {
+  width: 9rem;
+}
+
+/* Request entries */
+.timeline-entry--request {
+  border-left-color: var(--accent);
+  padding: 0;
+}
+
+.timeline-entry--request > details {
+  padding: 8px 10px;
+}
+
+.req-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.req-summary::-webkit-details-marker {
+  display: none;
+}
+
+.req-method {
+  font-weight: 600;
+  font-size: 0.72rem;
+  color: var(--accent);
+  flex: 0 0 auto;
+}
+
+.req-status {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  flex: 0 0 auto;
+}
+
+.req-status--error {
+  color: var(--danger);
+}
+
+.req-url {
+  font-size: 0.76rem;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.req-meta {
+  margin-top: 6px;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+.req-error {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: var(--danger);
+}
+
+.req-redirects {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.req-redirect {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  word-break: break-all;
+}
+
+.req-headers {
+  margin-top: 8px;
+}
+
+.req-headers__title {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  margin-bottom: 2px;
+}
+
+.req-header {
+  font-size: 0.7rem;
+  font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+  word-break: break-all;
+}
+
+.req-header__name {
+  color: var(--text-dim);
+}
+
+.req-header__value--redacted {
+  color: var(--accent);
+  font-style: italic;
+}

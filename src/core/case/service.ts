@@ -9,9 +9,16 @@
  *
  * @module
  */
-import type { ContentStore, MetadataStore } from '../storage/types';
+import type { ContentStore, EntryPage, EntryQuery, MetadataStore } from '../storage/types';
+import type { CapturedRequest } from '../traffic/request-tracker';
 import { normalizeTags } from './tags';
-import { CASE_SCHEMA_VERSION, type Case, type CaseEntry, type NoteEntry } from './types';
+import {
+  CASE_SCHEMA_VERSION,
+  type Case,
+  type CaseEntry,
+  type NoteEntry,
+  type RequestEntry,
+} from './types';
 
 /** Raised when an operation references a case id that does not exist. */
 export class CaseNotFoundError extends Error {
@@ -157,9 +164,50 @@ export class CaseService {
     return entry;
   }
 
+  /**
+   * Persist a captured HTTP request against an open case.
+   *
+   * Called by traffic capture in the background. Header redaction has already
+   * happened in the tracker; this method only wraps the record into an entry.
+   *
+   * @throws {CaseNotFoundError} If the case does not exist.
+   * @throws {CaseClosedError} If the case is closed.
+   */
+  async addRequest(caseId: string, captured: CapturedRequest): Promise<RequestEntry> {
+    const target = await this.#requireOpenCase(caseId);
+    const entry: RequestEntry = {
+      id: this.#newId(),
+      caseId: target.id,
+      kind: 'request',
+      // Order requests on the timeline by when they started.
+      timestamp: captured.timings.startedAt,
+      tags: [],
+      method: captured.method,
+      url: captured.url,
+      resourceType: captured.resourceType,
+      statusCode: captured.statusCode,
+      fromCache: captured.fromCache,
+      remoteIp: captured.remoteIp,
+      requestHeaders: captured.requestHeaders,
+      responseHeaders: captured.responseHeaders,
+      redirectChain: captured.redirectChain,
+      timings: captured.timings,
+      outcome: captured.outcome,
+      error: captured.error,
+      sensitiveRetained: captured.sensitiveRetained,
+    };
+    await this.#content.addEntry(entry);
+    return entry;
+  }
+
   /** All entries for a case, ordered by ascending timestamp. */
   async getTimeline(caseId: string): Promise<CaseEntry[]> {
     return this.#content.listEntries(caseId);
+  }
+
+  /** A newest-first, kind-filtered, paginated page of a case's entries. */
+  async getEntries(caseId: string, query: EntryQuery): Promise<EntryPage> {
+    return this.#content.queryEntries(caseId, query);
   }
 
   async #requireOpenCase(caseId: string): Promise<Case> {

@@ -1,10 +1,10 @@
 /**
  * Background coordinator.
  *
- * Owns the single {@link CaseService} instance and answers typed requests from
- * UI surfaces over `browser.runtime` messaging. This is the only context that
- * mutates the case model, which keeps persistence consistent as later waves add
- * producers (traffic capture, decoders) that also run here.
+ * Owns the single {@link CaseService} and {@link TrafficCapture} instances and
+ * answers typed requests from UI surfaces over `browser.runtime` messaging. This
+ * is the only context that mutates the case model and the only one that runs the
+ * `webRequest` listeners, which keeps persistence consistent.
  *
  * @module
  */
@@ -14,6 +14,7 @@ import { openWadjetDb } from '../core/storage/database';
 import { IdbContentStore } from '../core/storage/content-store';
 import { LocalMetadataStore } from '../core/storage/metadata-store';
 import type { KeyValueArea } from '../core/storage/types';
+import { TrafficCapture } from './traffic-capture';
 
 /** Adapt `browser.storage.local` to the minimal {@link KeyValueArea} shape. */
 function createKeyValueArea(): KeyValueArea {
@@ -24,17 +25,30 @@ function createKeyValueArea(): KeyValueArea {
   };
 }
 
-let servicePromise: Promise<CaseService> | null = null;
+interface BackgroundContext {
+  readonly service: CaseService;
+  readonly capture: TrafficCapture;
+}
 
-/** Lazily build the case service (opening IndexedDB on first use). */
-function getService(): Promise<CaseService> {
-  servicePromise ??= (async (): Promise<CaseService> => {
+let contextPromise: Promise<BackgroundContext> | null = null;
+
+/** Lazily build the case service and traffic capture (opening IndexedDB once). */
+function getContext(): Promise<BackgroundContext> {
+  contextPromise ??= (async (): Promise<BackgroundContext> => {
     const db = await openWadjetDb();
-    const metadata = new LocalMetadataStore(createKeyValueArea());
-    const content = new IdbContentStore(db);
-    return new CaseService({ metadata, content });
+    const area = createKeyValueArea();
+    const service = new CaseService({
+      metadata: new LocalMetadataStore(area),
+      content: new IdbContentStore(db),
+    });
+    const capture = new TrafficCapture({
+      storage: area,
+      onCaptured: (caseId, captured) => service.addRequest(caseId, captured).then(() => undefined),
+    });
+    await capture.init();
+    return { service, capture };
   })();
-  return servicePromise;
+  return contextPromise;
 }
 
 /** Structural guard for inbound messages. */
@@ -48,9 +62,9 @@ function isAnyRequest(value: unknown): value is AnyRequest {
   );
 }
 
-/** Route a validated request to the case service. */
+/** Route a validated request to the case service or traffic capture. */
 async function dispatch(req: AnyRequest): Promise<Response<RequestType>> {
-  const service = await getService();
+  const { service, capture } = await getContext();
   switch (req.type) {
     case 'case.list':
       return { ok: true, data: await service.listCases() };
@@ -60,15 +74,27 @@ async function dispatch(req: AnyRequest): Promise<Response<RequestType>> {
       return { ok: true, data: await service.createCase(req.params.name) };
     case 'case.open':
       return { ok: true, data: await service.openCase(req.params.id) };
-    case 'case.close':
-      return { ok: true, data: await service.closeCase(req.params.id) };
-    case 'case.timeline':
-      return { ok: true, data: await service.getTimeline(req.params.caseId) };
+    case 'case.close': {
+      const closed = await service.closeCase(req.params.id);
+      await capture.onCaseClosed(closed.id);
+      return { ok: true, data: closed };
+    }
+    case 'case.entries':
+      return { ok: true, data: await service.getEntries(req.params.caseId, req.params.query) };
     case 'note.add':
       return {
         ok: true,
         data: await service.addNote(req.params.caseId, req.params.text, req.params.tags),
       };
+    case 'capture.getState':
+      return { ok: true, data: await capture.getState() };
+    case 'capture.start':
+      return {
+        ok: true,
+        data: await capture.start(req.params.caseId, req.params.retainSensitive),
+      };
+    case 'capture.stop':
+      return { ok: true, data: await capture.stop() };
     default:
       return { ok: false, error: `Unknown request type: ${String((req as AnyRequest).type)}` };
   }
@@ -82,4 +108,9 @@ browser.runtime.onMessage.addListener((message: unknown): Promise<Response<Reque
     ok: false,
     error: error instanceof Error ? error.message : String(error),
   }));
+});
+
+// Build the context on startup so capture is restored if it was left enabled.
+void getContext().catch((error: unknown) => {
+  console.error('[wadjet] background initialization failed:', error);
 });

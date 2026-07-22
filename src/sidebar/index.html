@@ -27,10 +27,43 @@
         <p class="empty" id="cases-empty">No cases yet. Create one to begin.</p>
       </section>
 
+      <section class="capture" aria-label="Traffic capture" id="capture" hidden>
+        <h2 class="section__title">Traffic capture</h2>
+        <div class="capture__row">
+          <button type="button" id="btn-capture-toggle" class="btn">Start capture</button>
+          <span class="capture__status" id="capture-status">Idle</span>
+        </div>
+        <label class="capture__retain">
+          <input type="checkbox" id="capture-retain" />
+          Retain sensitive header values (raw)
+        </label>
+        <p class="capture__hint" id="capture-hint">
+          Starting capture asks, once, for permission to read requests on all sites. Sensitive
+          headers are redacted unless you opt in above.
+        </p>
+      </section>
+
       <section class="timeline" aria-label="Case timeline">
-        <h2 class="section__title">Timeline</h2>
+        <div class="timeline__head">
+          <h2 class="section__title">Timeline</h2>
+          <div class="timeline__filters">
+            <select id="filter-kind" class="filter-kind" aria-label="Filter by kind">
+              <option value="all">All</option>
+              <option value="note">Notes</option>
+              <option value="request">Requests</option>
+            </select>
+            <input
+              id="filter-text"
+              class="filter-text"
+              type="search"
+              placeholder="filter loaded…"
+              aria-label="Filter loaded entries"
+            />
+          </div>
+        </div>
         <ul class="timeline__list" id="timeline-list"></ul>
         <p class="empty" id="timeline-empty">Open a case to see its timeline.</p>
+        <button type="button" id="btn-load-more" class="btn" hidden>Load older</button>
       </section>
 
       <section class="composer" aria-label="Add note" id="composer" hidden>

@@ -5,7 +5,12 @@ import {
   isCaseEntry,
   SchemaVersionError,
 } from '../../src/core/case/schema';
-import { CASE_SCHEMA_VERSION, type Case, type NoteEntry } from '../../src/core/case/types';
+import {
+  CASE_SCHEMA_VERSION,
+  type Case,
+  type NoteEntry,
+  type RequestEntry,
+} from '../../src/core/case/types';
 
 const validCase: Case = {
   id: 'c1',
@@ -71,5 +76,51 @@ describe('assertSupportedSchema', () => {
 
   it('throws SchemaVersionError for other versions', () => {
     expect(() => assertSupportedSchema(CASE_SCHEMA_VERSION + 1)).toThrow(SchemaVersionError);
+  });
+});
+
+const validRequest: RequestEntry = {
+  id: 'r1',
+  caseId: 'c1',
+  kind: 'request',
+  timestamp: 1000,
+  tags: [],
+  method: 'GET',
+  url: 'https://example.com',
+  resourceType: 'main_frame',
+  statusCode: 200,
+  fromCache: false,
+  remoteIp: '1.1.1.1',
+  requestHeaders: [{ name: 'Accept', value: '*/*', redacted: false }],
+  responseHeaders: [{ name: 'Set-Cookie', value: '[redacted]', redacted: true }],
+  redirectChain: [{ fromUrl: 'http://x', toUrl: 'https://x', statusCode: 301, timestamp: 999 }],
+  timings: { startedAt: 1000, responseStartedAt: 1010, completedAt: 1020 },
+  outcome: 'completed',
+  error: null,
+  sensitiveRetained: false,
+};
+
+describe('isCaseEntry (request)', () => {
+  it('accepts a well-formed request', () => {
+    expect(isCaseEntry(validRequest)).toBe(true);
+  });
+
+  it('accepts an errored request with a null status', () => {
+    expect(
+      isCaseEntry({ ...validRequest, statusCode: null, outcome: 'error', error: 'NS_ERROR' }),
+    ).toBe(true);
+  });
+
+  it('rejects a request missing a method', () => {
+    const { method: _method, ...withoutMethod } = validRequest;
+    expect(isCaseEntry(withoutMethod)).toBe(false);
+  });
+
+  it('rejects malformed headers', () => {
+    expect(isCaseEntry({ ...validRequest, requestHeaders: [{ name: 'x' }] })).toBe(false);
+  });
+
+  it('rejects an unknown outcome', () => {
+    expect(isCaseEntry({ ...validRequest, outcome: 'pending' })).toBe(false);
   });
 });
