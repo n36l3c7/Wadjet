@@ -13,7 +13,13 @@
  * @module
  */
 import { parseTags } from '../core/case/tags';
-import type { CaseEntry, CaseEntryKind, NoteEntry, RequestEntry } from '../core/case/types';
+import type {
+  CaseEntry,
+  CaseEntryKind,
+  DecodedArtifactEntry,
+  NoteEntry,
+  RequestEntry,
+} from '../core/case/types';
 import { sendRequest } from '../core/messaging/client';
 import type { CaptureState } from '../core/traffic/state';
 
@@ -186,17 +192,71 @@ function renderRequest(entry: RequestEntry): HTMLLIElement {
   return li;
 }
 
+function renderDecoded(entry: DecodedArtifactEntry): HTMLLIElement {
+  const li = document.createElement('li');
+  li.className = 'timeline-entry timeline-entry--decoded';
+
+  const details = document.createElement('details');
+  const summary = document.createElement('summary');
+  summary.className = 'req-summary';
+  summary.append(span('req-method', 'DECODE'), span('req-url', entry.chain.join(' → ')));
+  details.append(summary);
+
+  const meta = document.createElement('div');
+  meta.className = 'req-meta';
+  meta.textContent = [
+    formatTime(entry.timestamp),
+    entry.sourceUrl ?? '',
+    entry.truncated ? 'truncated' : '',
+  ]
+    .filter((bit) => bit !== '')
+    .join(' · ');
+  details.append(meta);
+
+  const input = document.createElement('pre');
+  input.className = 'dec-value';
+  input.textContent = entry.input;
+  const output = document.createElement('pre');
+  output.className = 'dec-value';
+  output.textContent = entry.output;
+  details.append(
+    span('req-headers__title', 'Input'),
+    input,
+    span('req-headers__title', 'Output'),
+    output,
+  );
+
+  li.append(details);
+  for (const tag of entry.tags) li.append(renderTag(tag));
+  return li;
+}
+
 function renderEntry(entry: CaseEntry): HTMLLIElement {
-  return entry.kind === 'note' ? renderNote(entry) : renderRequest(entry);
+  switch (entry.kind) {
+    case 'note':
+      return renderNote(entry);
+    case 'request':
+      return renderRequest(entry);
+    case 'decoded-artifact':
+      return renderDecoded(entry);
+  }
 }
 
 function matchesTextFilter(entry: CaseEntry): boolean {
   const query = ui.filterText.value.trim().toLowerCase();
   if (query === '') return true;
-  const haystack =
-    entry.kind === 'note'
-      ? entry.text
-      : `${entry.method} ${entry.url} ${String(entry.statusCode ?? '')}`;
+  let haystack: string;
+  switch (entry.kind) {
+    case 'note':
+      haystack = entry.text;
+      break;
+    case 'request':
+      haystack = `${entry.method} ${entry.url} ${String(entry.statusCode ?? '')}`;
+      break;
+    case 'decoded-artifact':
+      haystack = `${entry.chain.join(' ')} ${entry.input} ${entry.output}`;
+      break;
+  }
   return haystack.toLowerCase().includes(query);
 }
 
@@ -383,7 +443,8 @@ ui.btnCaptureToggle.addEventListener('click', () => {
 
 ui.filterKind.addEventListener('change', () => {
   const value = ui.filterKind.value;
-  state.kindFilter = value === 'note' || value === 'request' ? value : 'all';
+  state.kindFilter =
+    value === 'note' || value === 'request' || value === 'decoded-artifact' ? value : 'all';
   if (state.activeCaseId !== null) {
     void run('filter', loadFirstPage(state.activeCaseId).then(renderTimeline));
   }

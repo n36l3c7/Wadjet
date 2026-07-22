@@ -28,6 +28,7 @@ const buildOptions = {
   entryPoints: {
     background: resolve(srcDir, 'background/index.ts'),
     'sidebar/index': resolve(srcDir, 'sidebar/index.ts'),
+    'content/overlay': resolve(srcDir, 'content/overlay.ts'),
   },
   outdir: outDir,
   bundle: true,

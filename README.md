@@ -16,14 +16,17 @@ reimplement them. See [Non-goals](#non-goals).
 
 ## Status
 
-**v0.2.0 — Traffic capture.** Building on the Foundation, this wave adds
-opt-in capture of HTTP(S) requests bound to the active case: method, URL,
-status, timings, redirect chains, and request/response headers, shown on a
-filterable, paginated timeline in the sidebar. Capture is non-blocking
-observation only (never interception), needs a one-time host permission granted
-when you start it, and redacts sensitive headers (`Authorization`, `Cookie`,
-tokens, …) before they are stored. Request/response **bodies** are not captured.
-See [`CHANGELOG.md`](CHANGELOG.md).
+**v0.3.0 — Inline decoders.** Adds a "Decode selection" context-menu item that
+opens an on-demand overlay next to the selection: it suggests likely encodings
+(base64, URL, hex, unicode, JWT) with a reason for each, decodes, **chains** one
+decoder onto another's output, and attaches the result to the active case as a
+decoded artifact. Decoding is deterministic and decode-only (no JWT signature
+verification); the overlay is injected on demand via `activeTab`, so decoding
+needs no broad host access.
+
+Earlier waves: **v0.2.0** opt-in traffic capture (redacted request metadata and
+headers on a filterable timeline); **v0.1.0** the Foundation (case model,
+storage, sidebar). See [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Requirements
 
@@ -65,8 +68,9 @@ The extension has two runtime contexts today:
   presentation and wiring only.
 
 The background context also runs the non-blocking `webRequest` listeners that
-feed traffic capture; the sidebar drives the capture toggle and the host-
-permission prompt.
+feed traffic capture and hosts the "Decode selection" context menu; the sidebar
+drives the capture toggle and the host-permission prompt. An overlay content
+script (`src/content/`) is injected on demand for inline decoding.
 
 Shared domain logic lives in `src/core/`:
 
@@ -75,6 +79,8 @@ Shared domain logic lives in `src/core/`:
   case metadata, IndexedDB for the entry stream and content-addressed blobs.
 - `core/traffic/` — request correlation (assembling `webRequest` events into one
   record) and sensitive-header redaction, both pure and unit-tested.
+- `core/decode/` — deterministic decoders (base64, URL, hex, unicode, JWT) and
+  rule-based encoding detection, both pure and unit-tested.
 - `core/messaging/` — the typed request/response protocol and client.
 
 Persisted records carry a `schemaVersion`, so the on-disk shape can evolve
@@ -90,6 +96,9 @@ justified here and in the PR that introduced it.
 | `storage`               | v0.1.0 | Persist the case list and the active-case pointer locally.                                   |
 | `webRequest`            | v0.2.0 | Observe request metadata and headers for traffic capture (non-blocking; never intercepting). |
 | `<all_urls>` (optional) | v0.2.0 | Host access to capture across sites. **Optional** — requested only when you start capture.   |
+| `menus`                 | v0.3.0 | Add the "Decode selection" context-menu item.                                                |
+| `activeTab`             | v0.3.0 | Access the current tab to inject the decoder overlay, granted by the menu click.             |
+| `scripting`             | v0.3.0 | Inject the decoder overlay content script on demand.                                         |
 
 Case entries and binary evidence are stored in IndexedDB, which requires no
 manifest permission. Wadjet makes **no network requests of its own** and

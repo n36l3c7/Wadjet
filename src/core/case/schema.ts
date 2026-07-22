@@ -17,7 +17,7 @@ import {
 } from './types';
 
 const CASE_STATUSES: readonly CaseStatus[] = ['open', 'closed'];
-const ENTRY_KINDS: readonly CaseEntryKind[] = ['note', 'request'];
+const ENTRY_KINDS: readonly CaseEntryKind[] = ['note', 'request', 'decoded-artifact'];
 const REQUEST_OUTCOMES = ['completed', 'error'] as const;
 
 /** Thrown when persisted data was written by an unsupported schema version. */
@@ -86,6 +86,16 @@ function isRequestTimings(value: unknown): boolean {
   );
 }
 
+function isDecodedArtifactShape(value: Record<string, unknown>): boolean {
+  return (
+    typeof value.input === 'string' &&
+    isStringArray(value.chain) &&
+    typeof value.output === 'string' &&
+    (value.sourceUrl === null || typeof value.sourceUrl === 'string') &&
+    typeof value.truncated === 'boolean'
+  );
+}
+
 function isRequestEntryShape(value: Record<string, unknown>): boolean {
   return (
     typeof value.method === 'string' &&
@@ -138,6 +148,8 @@ export function isCaseEntry(value: unknown): value is CaseEntry {
       return typeof value.text === 'string';
     case 'request':
       return isRequestEntryShape(value);
+    case 'decoded-artifact':
+      return isDecodedArtifactShape(value);
     default:
       return false;
   }

@@ -4,6 +4,7 @@ import {
   CaseNotFoundError,
   CaseService,
   EmptyValueError,
+  MAX_ARTIFACT_FIELD_CHARS,
 } from '../../src/core/case/service';
 import { CASE_SCHEMA_VERSION } from '../../src/core/case/types';
 import { LocalMetadataStore } from '../../src/core/storage/metadata-store';
@@ -183,5 +184,67 @@ describe('CaseService — requests and entry queries', () => {
       before: page1.nextBefore,
     });
     expect(page2.entries[0]?.timestamp).toBeLessThan(page1.entries[0]?.timestamp ?? 0);
+  });
+});
+
+describe('CaseService — decoded artifacts', () => {
+  let service: CaseService;
+
+  beforeEach(() => {
+    service = makeService();
+  });
+
+  it('adds a decoded artifact to an open case', async () => {
+    const created = await service.createCase('decode');
+    const entry = await service.addDecodedArtifact(created.id, {
+      input: 'aGk=',
+      chain: ['base64'],
+      output: 'hi',
+      sourceUrl: 'https://example.com',
+    });
+    expect(entry.kind).toBe('decoded-artifact');
+    expect(entry.chain).toEqual(['base64']);
+    expect(entry.output).toBe('hi');
+    expect(entry.sourceUrl).toBe('https://example.com');
+    expect(entry.truncated).toBe(false);
+  });
+
+  it('rejects an empty decoder chain', async () => {
+    const created = await service.createCase('decode');
+    await expect(
+      service.addDecodedArtifact(created.id, {
+        input: 'x',
+        chain: [],
+        output: 'x',
+        sourceUrl: null,
+      }),
+    ).rejects.toBeInstanceOf(EmptyValueError);
+  });
+
+  it('refuses a closed case', async () => {
+    const created = await service.createCase('decode');
+    await service.closeCase(created.id);
+    await expect(
+      service.addDecodedArtifact(created.id, {
+        input: 'x',
+        chain: ['url'],
+        output: 'x',
+        sourceUrl: null,
+      }),
+    ).rejects.toBeInstanceOf(CaseClosedError);
+  });
+
+  it('caps oversized fields and flags truncation', async () => {
+    const created = await service.createCase('decode');
+    const big = 'a'.repeat(MAX_ARTIFACT_FIELD_CHARS + 100);
+    const entry = await service.addDecodedArtifact(created.id, {
+      input: big,
+      chain: ['base64'],
+      output: big,
+      sourceUrl: null,
+    });
+    expect(entry.input.length).toBe(MAX_ARTIFACT_FIELD_CHARS);
+    expect(entry.output.length).toBe(MAX_ARTIFACT_FIELD_CHARS);
+    expect(entry.truncated).toBe(true);
   });
 });

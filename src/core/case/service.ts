@@ -16,9 +16,18 @@ import {
   CASE_SCHEMA_VERSION,
   type Case,
   type CaseEntry,
+  type DecodedArtifactEntry,
   type NoteEntry,
   type RequestEntry,
 } from './types';
+
+/** Maximum stored length of a decoded artifact's input or output, in characters. */
+export const MAX_ARTIFACT_FIELD_CHARS = 16_384;
+
+function capField(value: string): { value: string; truncated: boolean } {
+  if (value.length <= MAX_ARTIFACT_FIELD_CHARS) return { value, truncated: false };
+  return { value: value.slice(0, MAX_ARTIFACT_FIELD_CHARS), truncated: true };
+}
 
 /** Raised when an operation references a case id that does not exist. */
 export class CaseNotFoundError extends Error {
@@ -203,6 +212,38 @@ export class CaseService {
   /** All entries for a case, ordered by ascending timestamp. */
   async getTimeline(caseId: string): Promise<CaseEntry[]> {
     return this.#content.listEntries(caseId);
+  }
+
+  /**
+   * Persist a decoded artifact against an open case. Input and output are capped
+   * at {@link MAX_ARTIFACT_FIELD_CHARS}; `truncated` records whether either was.
+   *
+   * @throws {CaseNotFoundError} If the case does not exist.
+   * @throws {CaseClosedError} If the case is closed.
+   * @throws {EmptyValueError} If the decoder chain is empty.
+   */
+  async addDecodedArtifact(
+    caseId: string,
+    params: { input: string; chain: readonly string[]; output: string; sourceUrl: string | null },
+  ): Promise<DecodedArtifactEntry> {
+    const target = await this.#requireOpenCase(caseId);
+    if (params.chain.length === 0) throw new EmptyValueError('Decoder chain');
+    const input = capField(params.input);
+    const output = capField(params.output);
+    const entry: DecodedArtifactEntry = {
+      id: this.#newId(),
+      caseId: target.id,
+      kind: 'decoded-artifact',
+      timestamp: this.#now(),
+      tags: [],
+      input: input.value,
+      chain: [...params.chain],
+      output: output.value,
+      sourceUrl: params.sourceUrl,
+      truncated: input.truncated || output.truncated,
+    };
+    await this.#content.addEntry(entry);
+    return entry;
   }
 
   /** A newest-first, kind-filtered, paginated page of a case's entries. */

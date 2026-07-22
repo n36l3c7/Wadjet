@@ -14,6 +14,7 @@ import { openWadjetDb } from '../core/storage/database';
 import { IdbContentStore } from '../core/storage/content-store';
 import { LocalMetadataStore } from '../core/storage/metadata-store';
 import type { KeyValueArea } from '../core/storage/types';
+import { registerDecoderMenu } from './decoder-menu';
 import { TrafficCapture } from './traffic-capture';
 
 /** Adapt `browser.storage.local` to the minimal {@link KeyValueArea} shape. */
@@ -86,6 +87,16 @@ async function dispatch(req: AnyRequest): Promise<Response<RequestType>> {
         ok: true,
         data: await service.addNote(req.params.caseId, req.params.text, req.params.tags),
       };
+    case 'decoded.add':
+      return {
+        ok: true,
+        data: await service.addDecodedArtifact(req.params.caseId, {
+          input: req.params.input,
+          chain: req.params.chain,
+          output: req.params.output,
+          sourceUrl: req.params.sourceUrl,
+        }),
+      };
     case 'capture.getState':
       return { ok: true, data: await capture.getState() };
     case 'capture.start':
@@ -109,6 +120,9 @@ browser.runtime.onMessage.addListener((message: unknown): Promise<Response<Reque
     error: error instanceof Error ? error.message : String(error),
   }));
 });
+
+// Register the decoder context menu (its click handler injects the overlay).
+registerDecoderMenu();
 
 // Build the context on startup so capture is restored if it was left enabled.
 void getContext().catch((error: unknown) => {

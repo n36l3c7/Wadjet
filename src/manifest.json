@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Wadjet",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Case-bound investigation console for security analysts.",
   "browser_specific_settings": {
     "gecko": {
@@ -16,7 +16,7 @@
     "48": "icons/wadjet.svg",
     "96": "icons/wadjet.svg"
   },
-  "permissions": ["storage", "webRequest"],
+  "permissions": ["storage", "webRequest", "menus", "activeTab", "scripting"],
   "optional_host_permissions": ["<all_urls>"],
   "background": {
     "scripts": ["background.js"]

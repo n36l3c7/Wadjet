@@ -8,6 +8,24 @@ During the `0.x` series, each wave maps to a minor version.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-22
+
+### Added
+
+- **Wave 3 — Inline decoders.**
+- Deterministic, decode-only decoders: base64 (incl. url-safe), URL/percent,
+  hex, unicode escapes, and JWT (header + payload; the signature is shown but
+  never verified). Each is a pure, individually-tested function.
+- Rule-based encoding detection that suggests likely decoders with a
+  plain-language reason for each — suggestion only, never a verdict.
+- A "Decode selection" context-menu item that injects an on-demand overlay next
+  to the selection (shadow DOM): apply suggested or manual decoders, chain one
+  onto another's output, and add the result to the active case.
+- A new `decoded-artifact` entry kind (input, decoder chain, output, source URL)
+  on the filterable timeline, with input/output capped for storage.
+- New permissions: `menus`, `activeTab`, and `scripting` (the overlay is
+  injected on demand; no broad host access is needed for decoding).
+
 ## [0.2.0] - 2026-07-22
 
 ### Added
@@ -55,6 +73,7 @@ During the `0.x` series, each wave maps to a minor version.
   `web-ext lint` on every push and pull request.
 - Documentation: README, CONTRIBUTING, and SECURITY.
 
-[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/n36l3c7/Wadjet/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/n36l3c7/Wadjet/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/n36l3c7/Wadjet/releases/tag/v0.1.0

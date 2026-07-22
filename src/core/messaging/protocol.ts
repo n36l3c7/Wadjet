@@ -11,7 +11,7 @@
  *
  * @module
  */
-import type { Case, NoteEntry } from '../case/types';
+import type { Case, DecodedArtifactEntry, NoteEntry } from '../case/types';
 import type { EntryPage, EntryQuery } from '../storage/types';
 import type { CaptureState } from '../traffic/state';
 
@@ -28,6 +28,16 @@ export interface RequestMap {
   'case.close': { params: { id: string }; result: Case };
   'case.entries': { params: { caseId: string; query: EntryQuery }; result: EntryPage };
   'note.add': { params: { caseId: string; text: string; tags: string[] }; result: NoteEntry };
+  'decoded.add': {
+    params: {
+      caseId: string;
+      input: string;
+      chain: string[];
+      output: string;
+      sourceUrl: string | null;
+    };
+    result: DecodedArtifactEntry;
+  };
   'capture.getState': { params: Record<string, never>; result: CaptureState };
   'capture.start': {
     params: { caseId: string; retainSensitive: boolean };

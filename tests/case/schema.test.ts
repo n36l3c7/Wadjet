@@ -8,6 +8,7 @@ import {
 import {
   CASE_SCHEMA_VERSION,
   type Case,
+  type DecodedArtifactEntry,
   type NoteEntry,
   type RequestEntry,
 } from '../../src/core/case/types';
@@ -122,5 +123,37 @@ describe('isCaseEntry (request)', () => {
 
   it('rejects an unknown outcome', () => {
     expect(isCaseEntry({ ...validRequest, outcome: 'pending' })).toBe(false);
+  });
+});
+
+const validDecoded: DecodedArtifactEntry = {
+  id: 'd1',
+  caseId: 'c1',
+  kind: 'decoded-artifact',
+  timestamp: 1000,
+  tags: [],
+  input: 'aGVsbG8=',
+  chain: ['base64'],
+  output: 'hello',
+  sourceUrl: 'https://example.com',
+  truncated: false,
+};
+
+describe('isCaseEntry (decoded-artifact)', () => {
+  it('accepts a well-formed decoded artifact', () => {
+    expect(isCaseEntry(validDecoded)).toBe(true);
+  });
+
+  it('accepts a null source URL', () => {
+    expect(isCaseEntry({ ...validDecoded, sourceUrl: null })).toBe(true);
+  });
+
+  it('rejects a non-string chain', () => {
+    expect(isCaseEntry({ ...validDecoded, chain: [1, 2] })).toBe(false);
+  });
+
+  it('rejects a missing output', () => {
+    const { output: _output, ...withoutOutput } = validDecoded;
+    expect(isCaseEntry(withoutOutput)).toBe(false);
   });
 });

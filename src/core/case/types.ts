@@ -38,12 +38,12 @@ export interface Case {
 /**
  * Discriminant identifying the concrete shape of a {@link CaseEntry}.
  *
- * Wave 1 added `note`; Wave 2 adds `request`. Later waves extend this union
- * further (`decoded-artifact`, `enrichment`, `screenshot`, `detonation`); the
- * discriminated-union design keeps timeline, tagging and export code agnostic to
- * which kinds exist.
+ * Wave 1 added `note`; Wave 2 added `request`; Wave 3 adds `decoded-artifact`.
+ * Later waves extend this union further (`enrichment`, `screenshot`,
+ * `detonation`); the discriminated-union design keeps timeline, tagging and
+ * export code agnostic to which kinds exist.
  */
-export type CaseEntryKind = 'note' | 'request';
+export type CaseEntryKind = 'note' | 'request' | 'decoded-artifact';
 
 /** Fields shared by every entry, regardless of {@link CaseEntryKind}. */
 export interface CaseEntryBase {
@@ -120,7 +120,27 @@ export interface RequestEntry extends CaseEntryBase {
 }
 
 /**
+ * A decoded artifact: text the analyst decoded inline, with the chain of
+ * decoders applied. Input and output are size-capped ({@link truncated} records
+ * whether either was cut). Decoded content may itself be sensitive (e.g. JWT
+ * claims) — it is stored because decoding it was a deliberate analyst action.
+ */
+export interface DecodedArtifactEntry extends CaseEntryBase {
+  readonly kind: 'decoded-artifact';
+  /** The original selected text (possibly truncated). */
+  readonly input: string;
+  /** Decoder ids applied in order, e.g. `['base64', 'url']`. */
+  readonly chain: string[];
+  /** The final decoded output (possibly truncated). */
+  readonly output: string;
+  /** URL of the page the selection came from, if known. */
+  readonly sourceUrl: string | null;
+  /** True if `input` or `output` was capped for storage. */
+  readonly truncated: boolean;
+}
+
+/**
  * Any entry attached to a case. A discriminated union over {@link CaseEntryKind};
  * narrow on `kind` to reach kind-specific fields.
  */
-export type CaseEntry = NoteEntry | RequestEntry;
+export type CaseEntry = NoteEntry | RequestEntry | DecodedArtifactEntry;

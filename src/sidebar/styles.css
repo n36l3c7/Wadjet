@@ -390,3 +390,27 @@ body {
   color: var(--accent);
   font-style: italic;
 }
+
+/* Decoded artifacts */
+.timeline-entry--decoded {
+  border-left-color: #6ea8d8;
+  padding: 0;
+}
+
+.timeline-entry--decoded > details {
+  padding: 8px 10px;
+}
+
+.dec-value {
+  margin: 2px 0 6px;
+  padding: 6px 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 140px;
+  overflow: auto;
+  font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+  font-size: 0.7rem;
+}
