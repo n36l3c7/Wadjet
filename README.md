@@ -16,19 +16,16 @@ reimplement them. See [Non-goals](#non-goals).
 
 ## Status
 
-**v0.5.0 — Isolated detonation.** Adds "Open in throwaway container": a URL is
-opened in a fresh `contextualIdentities` container whose cookies and storage are
-isolated, and the container is removed when the tab closes. It is recorded on the
-case as a detonation entry. Launch it from a context menu (on a link or
-selection), a sidebar field, or a button on a captured request.
+**v0.6.0 — Export.** Export the active case as a **Markdown** report (metadata,
+extracted IOCs, timeline), a **HAR** of captured requests, a **CSV** of IOCs, or
+a full **JSON** dump — download the file or copy it to the clipboard, ready to
+paste into a report. IOCs are extracted from structured fields only (request and
+detonation URLs, decoded-artifact sources, enrichment indicators). Redacted
+header values stay redacted in every export.
 
-> **This is cookie/storage isolation only — not a network, process, or exploit
-> sandbox.** A page opened this way still runs in your Firefox, on your network.
-> The UI says so wherever the feature appears.
-
-Earlier waves: **v0.4.0** enrichment; **v0.3.0** inline decoders; **v0.2.0**
-opt-in traffic capture; **v0.1.0** the Foundation. See
-[`CHANGELOG.md`](CHANGELOG.md).
+Earlier waves: **v0.5.0** isolated detonation; **v0.4.0** enrichment; **v0.3.0**
+inline decoders; **v0.2.0** opt-in traffic capture; **v0.1.0** the Foundation.
+See [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Requirements
 
@@ -89,6 +86,8 @@ Shared domain logic lives in `src/core/`:
   token-bucket rate limiter, a TTL cache, and the enrichment orchestrator (all
   injectable and unit-tested; the HTTP call is the only glue).
 - `core/settings/` — extension settings, including per-provider API keys.
+- `core/export/` — IOC extraction and the Markdown / HAR / CSV / JSON export
+  builders, all pure and unit-tested.
 - `core/messaging/` — the typed request/response protocol and client.
 
 Persisted records carry a `schemaVersion`, so the on-disk shape can evolve
@@ -110,6 +109,7 @@ justified here and in the PR that introduced it.
 | provider hosts (optional) | v0.4.0 | Reach a provider's API for enrichment. **Optional** — each host is requested only when you save that provider's key. |
 | `contextualIdentities`    | v0.5.0 | Create and remove throwaway containers for isolated detonation.                                                      |
 | `cookies`                 | v0.5.0 | Support clean-up of a throwaway container's cookies.                                                                 |
+| `downloads`               | v0.6.0 | Save an exported report/HAR/CSV/JSON file to disk.                                                                   |
 
 Enrichment is the **only** feature that sends anything off the machine: when you
 enrich an indicator, that indicator is sent to the provider whose key you

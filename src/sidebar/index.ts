@@ -21,6 +21,7 @@ import type {
   NoteEntry,
   RequestEntry,
 } from '../core/case/types';
+import type { ExportFormat } from '../core/export';
 import { sendRequest } from '../core/messaging/client';
 import type { CaptureState } from '../core/traffic/state';
 import { renderEnrichmentEntry, setupEnrichment } from './enrichment';
@@ -60,6 +61,10 @@ const ui = {
   btnAddNote: must<HTMLButtonElement>('#btn-add-note'),
   detonateInput: must<HTMLInputElement>('#detonate-input'),
   btnDetonate: must<HTMLButtonElement>('#btn-detonate'),
+  exportSection: must<HTMLElement>('#export'),
+  exportFormat: must<HTMLSelectElement>('#export-format'),
+  btnExportDownload: must<HTMLButtonElement>('#btn-export-download'),
+  btnExportCopy: must<HTMLButtonElement>('#btn-export-copy'),
 };
 
 type KindFilter = 'all' | CaseEntryKind;
@@ -384,6 +389,7 @@ async function refresh(): Promise<void> {
   ui.activeStatus.textContent = active ? active.status : '';
   ui.btnCloseCase.disabled = active === null;
   ui.composer.hidden = active === null;
+  ui.exportSection.hidden = active === null;
 
   renderCapture();
 
@@ -468,6 +474,40 @@ async function openIsolated(url: string): Promise<void> {
   }
 }
 
+function selectedExportFormat(): ExportFormat {
+  const value = ui.exportFormat.value;
+  return value === 'har' || value === 'csv' || value === 'json' ? value : 'markdown';
+}
+
+async function exportDownload(): Promise<void> {
+  if (state.activeCaseId === null) return;
+  const file = await sendRequest('export.build', {
+    caseId: state.activeCaseId,
+    format: selectedExportFormat(),
+  });
+  const url = URL.createObjectURL(new Blob([file.content], { type: file.mimeType }));
+  try {
+    await browser.downloads.download({ url, filename: file.filename, saveAs: true });
+  } finally {
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 60_000);
+  }
+}
+
+async function exportCopy(): Promise<void> {
+  if (state.activeCaseId === null) return;
+  const file = await sendRequest('export.build', {
+    caseId: state.activeCaseId,
+    format: selectedExportFormat(),
+  });
+  await navigator.clipboard.writeText(file.content);
+  ui.btnExportCopy.textContent = 'Copied';
+  setTimeout(() => {
+    ui.btnExportCopy.textContent = 'Copy';
+  }, 1500);
+}
+
 /** Run an async action, surfacing failures instead of leaving the panel broken. */
 function run(context: string, action: Promise<void>): Promise<void> {
   return action.catch((error: unknown) => {
@@ -489,6 +529,8 @@ ui.btnDetonate.addEventListener('click', () => {
   ui.detonateInput.value = '';
   void run('detonate', openIsolated(url));
 });
+ui.btnExportDownload.addEventListener('click', () => void run('export download', exportDownload()));
+ui.btnExportCopy.addEventListener('click', () => void run('export copy', exportCopy()));
 
 ui.btnCaptureToggle.addEventListener('click', () => {
   // Decide synchronously from cached state so the permission prompt (start) runs

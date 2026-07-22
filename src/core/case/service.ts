@@ -118,6 +118,11 @@ export class CaseService {
     return this.#metadata.getCase(id);
   }
 
+  /** The case with `id`, or `undefined` if none exists. */
+  async getCase(id: string): Promise<Case | undefined> {
+    return this.#metadata.getCase(id);
+  }
+
   /**
    * Make an existing case the active case.
    *

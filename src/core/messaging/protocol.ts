@@ -14,6 +14,7 @@
 import type { Case, DecodedArtifactEntry, EnrichmentEntry, NoteEntry } from '../case/types';
 import type { LookupOutcome } from '../enrich/service';
 import type { EnrichmentResult, ProviderId } from '../enrich/types';
+import type { ExportFile, ExportFormat } from '../export';
 import type { SettingsView } from '../settings/store';
 import type { EntryPage, EntryQuery } from '../storage/types';
 import type { CaptureState } from '../traffic/state';
@@ -60,6 +61,7 @@ export interface RequestMap {
     result: EnrichmentEntry;
   };
   detonate: { params: { url: string }; result: { container: string; recorded: boolean } };
+  'export.build': { params: { caseId: string; format: ExportFormat }; result: ExportFile };
 }
 
 /** All valid request type discriminants. */

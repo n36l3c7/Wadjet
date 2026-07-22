@@ -8,6 +8,20 @@ During the `0.x` series, each wave maps to a minor version.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-07-22
+
+### Added
+
+- **Wave 6 — Export.**
+- Export the active case as a Markdown report (metadata, extracted IOCs,
+  timeline), a HAR 1.2 of captured requests, a CSV of IOCs, or a full JSON dump.
+- Deterministic IOC extraction from structured fields only (request and
+  detonation URLs and their hostnames, decoded-artifact sources, enrichment
+  indicators), deduplicated and classified.
+- Download exports via the Firefox `downloads` API, or copy them to the
+  clipboard. Redacted header values remain redacted in every format.
+- New permission: `downloads`.
+
 ## [0.5.0] - 2026-07-22
 
 ### Added
@@ -111,7 +125,8 @@ During the `0.x` series, each wave maps to a minor version.
   `web-ext lint` on every push and pull request.
 - Documentation: README, CONTRIBUTING, and SECURITY.
 
-[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/n36l3c7/Wadjet/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/n36l3c7/Wadjet/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/n36l3c7/Wadjet/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/n36l3c7/Wadjet/compare/v0.2.0...v0.3.0

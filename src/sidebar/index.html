@@ -78,6 +78,20 @@
         </p>
       </section>
 
+      <section class="export" aria-label="Export" id="export" hidden>
+        <h2 class="section__title">Export case</h2>
+        <div class="export__row">
+          <select id="export-format" class="export__format" aria-label="Export format">
+            <option value="markdown">Markdown report</option>
+            <option value="har">HAR (requests)</option>
+            <option value="csv">CSV (IOCs)</option>
+            <option value="json">JSON (full)</option>
+          </select>
+          <button type="button" id="btn-export-download" class="btn btn--primary">Download</button>
+          <button type="button" id="btn-export-copy" class="btn">Copy</button>
+        </div>
+      </section>
+
       <section class="timeline" aria-label="Case timeline">
         <div class="timeline__head">
           <h2 class="section__title">Timeline</h2>

@@ -618,3 +618,33 @@ body {
   font-size: 0.72rem;
   padding: 3px 8px;
 }
+
+/* Export */
+.export {
+  border-top: 1px solid var(--border);
+  padding-top: var(--gap);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.export__row {
+  display: flex;
+  gap: 6px;
+}
+
+.export__format {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--text);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 8px;
+}
+
+.export__row .btn {
+  flex: 0 0 auto;
+}

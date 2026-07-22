@@ -14,6 +14,7 @@ import { PROVIDERS } from '../core/enrich/providers';
 import { TokenBucket } from '../core/enrich/rate-limit';
 import { EnrichmentService } from '../core/enrich/service';
 import type { ProviderId } from '../core/enrich/types';
+import { buildExport } from '../core/export';
 import type { AnyRequest, Response, RequestType } from '../core/messaging/protocol';
 import { SettingsStore } from '../core/settings/store';
 import { openWadjetDb } from '../core/storage/database';
@@ -222,6 +223,18 @@ async function dispatch(req: AnyRequest): Promise<Response<RequestType>> {
       };
     case 'detonate':
       return { ok: true, data: await detonateUrl(req.params.url) };
+    case 'export.build': {
+      const caseRecord = await service.getCase(req.params.caseId);
+      if (caseRecord === undefined) {
+        return { ok: false, error: `No case with id "${req.params.caseId}".` };
+      }
+      const entries = await service.getTimeline(req.params.caseId);
+      const toolVersion = browser.runtime.getManifest().version;
+      return {
+        ok: true,
+        data: buildExport(req.params.format, caseRecord, entries, { toolVersion }),
+      };
+    }
     default:
       return { ok: false, error: `Unknown request type: ${String((req as AnyRequest).type)}` };
   }
