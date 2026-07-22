@@ -61,6 +61,23 @@
         </details>
       </section>
 
+      <section class="detonate" aria-label="Throwaway container">
+        <h2 class="section__title">Throwaway container</h2>
+        <div class="detonate__row">
+          <input
+            id="detonate-input"
+            class="detonate__input"
+            type="text"
+            placeholder="https://suspicious.example/…"
+          />
+          <button type="button" id="btn-detonate" class="btn">Open isolated</button>
+        </div>
+        <p class="detonate__caveat">
+          Isolates cookies &amp; storage only — <strong>not</strong> a network, process, or exploit
+          sandbox. The page still runs in your Firefox, on your network.
+        </p>
+      </section>
+
       <section class="timeline" aria-label="Case timeline">
         <div class="timeline__head">
           <h2 class="section__title">Timeline</h2>
@@ -71,6 +88,7 @@
               <option value="request">Requests</option>
               <option value="decoded-artifact">Decoded</option>
               <option value="enrichment">Enriched</option>
+              <option value="detonation">Detonations</option>
             </select>
             <input
               id="filter-text"

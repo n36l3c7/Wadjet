@@ -17,7 +17,13 @@ import {
 } from './types';
 
 const CASE_STATUSES: readonly CaseStatus[] = ['open', 'closed'];
-const ENTRY_KINDS: readonly CaseEntryKind[] = ['note', 'request', 'decoded-artifact', 'enrichment'];
+const ENTRY_KINDS: readonly CaseEntryKind[] = [
+  'note',
+  'request',
+  'decoded-artifact',
+  'enrichment',
+  'detonation',
+];
 const REQUEST_OUTCOMES = ['completed', 'error'] as const;
 
 /** Thrown when persisted data was written by an unsupported schema version. */
@@ -109,6 +115,14 @@ function isEnrichmentShape(value: Record<string, unknown>): boolean {
   );
 }
 
+function isDetonationShape(value: Record<string, unknown>): boolean {
+  return (
+    typeof value.url === 'string' &&
+    typeof value.container === 'string' &&
+    typeof value.cookieStoreId === 'string'
+  );
+}
+
 function isDecodedArtifactShape(value: Record<string, unknown>): boolean {
   return (
     typeof value.input === 'string' &&
@@ -175,6 +189,8 @@ export function isCaseEntry(value: unknown): value is CaseEntry {
       return isDecodedArtifactShape(value);
     case 'enrichment':
       return isEnrichmentShape(value);
+    case 'detonation':
+      return isDetonationShape(value);
     default:
       return false;
   }

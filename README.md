@@ -16,17 +16,19 @@ reimplement them. See [Non-goals](#non-goals).
 
 ## Status
 
-**v0.4.0 — Enrichment.** Adds on-demand lookup of a domain, IP, hash, or URL via
-a registry of independent providers (VirusTotal, AlienVault OTX, AbuseIPDB),
-each queried only when its API key is configured. Results are shown per provider
-— never merged into a single score — cached with a TTL, rate-limited per
-provider, and offline-safe. Enrich from a "Enrich selection" context-menu item
-or a field in the sidebar, and attach the result to the case. Keys live in
-`browser.storage.local` and each provider's host permission is requested only
-when you save its key.
+**v0.5.0 — Isolated detonation.** Adds "Open in throwaway container": a URL is
+opened in a fresh `contextualIdentities` container whose cookies and storage are
+isolated, and the container is removed when the tab closes. It is recorded on the
+case as a detonation entry. Launch it from a context menu (on a link or
+selection), a sidebar field, or a button on a captured request.
 
-Earlier waves: **v0.3.0** inline decoders; **v0.2.0** opt-in traffic capture;
-**v0.1.0** the Foundation. See [`CHANGELOG.md`](CHANGELOG.md).
+> **This is cookie/storage isolation only — not a network, process, or exploit
+> sandbox.** A page opened this way still runs in your Firefox, on your network.
+> The UI says so wherever the feature appears.
+
+Earlier waves: **v0.4.0** enrichment; **v0.3.0** inline decoders; **v0.2.0**
+opt-in traffic capture; **v0.1.0** the Foundation. See
+[`CHANGELOG.md`](CHANGELOG.md).
 
 ## Requirements
 
@@ -68,11 +70,11 @@ The extension has two runtime contexts today:
   presentation and wiring only.
 
 The background context also runs the non-blocking `webRequest` listeners that
-feed traffic capture, hosts the "Decode selection" and "Enrich selection"
-context menus, and makes provider network calls; the sidebar drives the capture
-toggle, the host-permission prompts, provider keys, and enrichment lookups. An
-overlay content script (`src/content/`) is injected on demand for inline
-decoding.
+feed traffic capture, hosts the decode / enrich / detonate context menus, makes
+provider network calls, and manages throwaway detonation containers; the sidebar
+drives the capture toggle, the host-permission prompts, provider keys,
+enrichment lookups, and detonation. An overlay content script (`src/content/`)
+is injected on demand for inline decoding.
 
 Shared domain logic lives in `src/core/`:
 
@@ -106,6 +108,8 @@ justified here and in the PR that introduced it.
 | `activeTab`               | v0.3.0 | Access the current tab to inject the decoder overlay, granted by the menu click.                                     |
 | `scripting`               | v0.3.0 | Inject the decoder overlay content script on demand.                                                                 |
 | provider hosts (optional) | v0.4.0 | Reach a provider's API for enrichment. **Optional** — each host is requested only when you save that provider's key. |
+| `contextualIdentities`    | v0.5.0 | Create and remove throwaway containers for isolated detonation.                                                      |
+| `cookies`                 | v0.5.0 | Support clean-up of a throwaway container's cookies.                                                                 |
 
 Enrichment is the **only** feature that sends anything off the machine: when you
 enrich an indicator, that indicator is sent to the provider whose key you

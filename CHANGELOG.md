@@ -8,6 +8,20 @@ During the `0.x` series, each wave maps to a minor version.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-07-22
+
+### Added
+
+- **Wave 5 — Isolated detonation.**
+- "Open in throwaway container": opens a URL in a fresh `contextualIdentities`
+  container (isolated cookies/storage) and removes the container when its tab
+  closes. Recorded on the case as a new `detonation` entry kind.
+- Launch from a context menu (link or selection), a sidebar field, or a button
+  on a captured request entry.
+- Honest UI throughout: the feature states that it isolates cookies/storage
+  only and is **not** a network, process, or exploit sandbox.
+- New permissions: `contextualIdentities` and `cookies`.
+
 ## [0.4.0] - 2026-07-22
 
 ### Added
@@ -97,7 +111,8 @@ During the `0.x` series, each wave maps to a minor version.
   `web-ext lint` on every push and pull request.
 - Documentation: README, CONTRIBUTING, and SECURITY.
 
-[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/n36l3c7/Wadjet/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/n36l3c7/Wadjet/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/n36l3c7/Wadjet/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/n36l3c7/Wadjet/compare/v0.1.0...v0.2.0

@@ -9,6 +9,7 @@ import {
   CASE_SCHEMA_VERSION,
   type Case,
   type DecodedArtifactEntry,
+  type DetonationEntry,
   type EnrichmentEntry,
   type NoteEntry,
   type RequestEntry,
@@ -193,5 +194,32 @@ describe('isCaseEntry (enrichment)', () => {
   it('rejects a missing indicator', () => {
     const { indicator: _indicator, ...withoutIndicator } = validEnrichment;
     expect(isCaseEntry(withoutIndicator)).toBe(false);
+  });
+});
+
+const validDetonation: DetonationEntry = {
+  id: 't1',
+  caseId: 'c1',
+  kind: 'detonation',
+  timestamp: 1000,
+  tags: [],
+  url: 'https://evil.example',
+  container: 'Wadjet throwaway ab12cd34',
+  cookieStoreId: 'firefox-container-9',
+};
+
+describe('isCaseEntry (detonation)', () => {
+  it('accepts a well-formed detonation', () => {
+    expect(isCaseEntry(validDetonation)).toBe(true);
+  });
+
+  it('rejects a missing url', () => {
+    const { url: _url, ...withoutUrl } = validDetonation;
+    expect(isCaseEntry(withoutUrl)).toBe(false);
+  });
+
+  it('rejects a missing cookieStoreId', () => {
+    const { cookieStoreId: _cookieStoreId, ...withoutStore } = validDetonation;
+    expect(isCaseEntry(withoutStore)).toBe(false);
   });
 });

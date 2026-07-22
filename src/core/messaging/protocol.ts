@@ -59,6 +59,7 @@ export interface RequestMap {
     };
     result: EnrichmentEntry;
   };
+  detonate: { params: { url: string }; result: { container: string; recorded: boolean } };
 }
 
 /** All valid request type discriminants. */

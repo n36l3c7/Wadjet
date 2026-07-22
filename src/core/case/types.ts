@@ -40,11 +40,11 @@ export interface Case {
  * Discriminant identifying the concrete shape of a {@link CaseEntry}.
  *
  * Wave 1 added `note`; Wave 2 added `request`; Wave 3 added `decoded-artifact`;
- * Wave 4 adds `enrichment`. Later waves extend this union further (`screenshot`,
- * `detonation`); the discriminated-union design keeps timeline, tagging and
- * export code agnostic to which kinds exist.
+ * Wave 4 added `enrichment`; Wave 5 adds `detonation`. Later waves may extend
+ * this union further (e.g. `screenshot`); the discriminated-union design keeps
+ * timeline, tagging and export code agnostic to which kinds exist.
  */
-export type CaseEntryKind = 'note' | 'request' | 'decoded-artifact' | 'enrichment';
+export type CaseEntryKind = 'note' | 'request' | 'decoded-artifact' | 'enrichment' | 'detonation';
 
 /** Fields shared by every entry, regardless of {@link CaseEntryKind}. */
 export interface CaseEntryBase {
@@ -153,7 +153,22 @@ export interface EnrichmentEntry extends CaseEntryBase {
 }
 
 /**
+ * A record that a URL was opened in a throwaway `contextualIdentities`
+ * container. This isolates cookies and storage only — it is **not** a network,
+ * process, or exploit sandbox; the page still runs in the analyst's Firefox.
+ */
+export interface DetonationEntry extends CaseEntryBase {
+  readonly kind: 'detonation';
+  readonly url: string;
+  /** Human-readable throwaway container name. */
+  readonly container: string;
+  /** The container's cookie store id. */
+  readonly cookieStoreId: string;
+}
+
+/**
  * Any entry attached to a case. A discriminated union over {@link CaseEntryKind};
  * narrow on `kind` to reach kind-specific fields.
  */
-export type CaseEntry = NoteEntry | RequestEntry | DecodedArtifactEntry | EnrichmentEntry;
+export type CaseEntry =
+  NoteEntry | RequestEntry | DecodedArtifactEntry | EnrichmentEntry | DetonationEntry;

@@ -21,6 +21,7 @@ import { IdbContentStore } from '../core/storage/content-store';
 import { LocalMetadataStore } from '../core/storage/metadata-store';
 import type { KeyValueArea } from '../core/storage/types';
 import { registerContextMenus } from './context-menus';
+import { DetonationManager } from './detonation';
 import { TrafficCapture } from './traffic-capture';
 
 /** Adapt `browser.storage.local` to the minimal {@link KeyValueArea} shape. */
@@ -54,11 +55,30 @@ function createRateLimiters(): Map<ProviderId, TokenBucket> {
   ]);
 }
 
+/** Adapt `browser.contextualIdentities` and `browser.tabs` for detonation. */
+function createDetonationManager(): DetonationManager {
+  return new DetonationManager({
+    containers: {
+      create: (details) => browser.contextualIdentities.create(details),
+      remove: (cookieStoreId) => browser.contextualIdentities.remove(cookieStoreId),
+    },
+    tabs: {
+      create: (details) => browser.tabs.create(details),
+      onRemoved: (listener) => {
+        browser.tabs.onRemoved.addListener((tabId) => {
+          listener(tabId);
+        });
+      },
+    },
+  });
+}
+
 interface BackgroundContext {
   readonly service: CaseService;
   readonly capture: TrafficCapture;
   readonly enrichment: EnrichmentService;
   readonly settings: SettingsStore;
+  readonly detonation: DetonationManager;
 }
 
 let contextPromise: Promise<BackgroundContext> | null = null;
@@ -88,9 +108,26 @@ function getContext(): Promise<BackgroundContext> {
       fetchJson,
       rateLimiterFor: (id) => rateLimiters.get(id) ?? fallbackBucket,
     });
-    return { service, capture, enrichment, settings };
+    const detonation = createDetonationManager();
+    return { service, capture, enrichment, settings, detonation };
   })();
   return contextPromise;
+}
+
+/** Open a URL in a throwaway container and record it against the active case. */
+async function detonateUrl(url: string): Promise<{ container: string; recorded: boolean }> {
+  const { service, detonation } = await getContext();
+  const outcome = await detonation.detonate(url);
+  const active = await service.getActiveCase();
+  if (active === undefined) {
+    return { container: outcome.container, recorded: false };
+  }
+  await service.addDetonation(active.id, {
+    url: url.trim(),
+    container: outcome.container,
+    cookieStoreId: outcome.cookieStoreId,
+  });
+  return { container: outcome.container, recorded: true };
 }
 
 /** Enrich a selection (from the context menu) and attach it to the active case. */
@@ -183,6 +220,8 @@ async function dispatch(req: AnyRequest): Promise<Response<RequestType>> {
           results: req.params.results,
         }),
       };
+    case 'detonate':
+      return { ok: true, data: await detonateUrl(req.params.url) };
     default:
       return { ok: false, error: `Unknown request type: ${String((req as AnyRequest).type)}` };
   }
@@ -203,6 +242,11 @@ registerContextMenus({
   onEnrich: (selectionText) => {
     void enrichSelection(selectionText).catch((error: unknown) => {
       console.error('[wadjet] enrich selection failed:', error);
+    });
+  },
+  onDetonate: (url) => {
+    void detonateUrl(url).catch((error: unknown) => {
+      console.error('[wadjet] detonation failed:', error);
     });
   },
 });

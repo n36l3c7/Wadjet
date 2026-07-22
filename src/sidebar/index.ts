@@ -17,6 +17,7 @@ import type {
   CaseEntry,
   CaseEntryKind,
   DecodedArtifactEntry,
+  DetonationEntry,
   NoteEntry,
   RequestEntry,
 } from '../core/case/types';
@@ -57,6 +58,8 @@ const ui = {
   noteInput: must<HTMLTextAreaElement>('#note-input'),
   noteTags: must<HTMLInputElement>('#note-tags'),
   btnAddNote: must<HTMLButtonElement>('#btn-add-note'),
+  detonateInput: must<HTMLInputElement>('#detonate-input'),
+  btnDetonate: must<HTMLButtonElement>('#btn-detonate'),
 };
 
 type KindFilter = 'all' | CaseEntryKind;
@@ -188,6 +191,18 @@ function renderRequest(entry: RequestEntry): HTMLLIElement {
     renderHeaderList('Response headers', entry.responseHeaders),
   );
 
+  const actions = document.createElement('div');
+  actions.className = 'req-actions';
+  const openIsolatedButton = document.createElement('button');
+  openIsolatedButton.type = 'button';
+  openIsolatedButton.className = 'btn req-action';
+  openIsolatedButton.textContent = 'Open isolated';
+  openIsolatedButton.addEventListener('click', () => {
+    void run('detonate', openIsolated(entry.url));
+  });
+  actions.append(openIsolatedButton);
+  details.append(actions);
+
   li.append(details);
   for (const tag of entry.tags) li.append(renderTag(tag));
   return li;
@@ -232,6 +247,23 @@ function renderDecoded(entry: DecodedArtifactEntry): HTMLLIElement {
   return li;
 }
 
+function renderDetonation(entry: DetonationEntry): HTMLLIElement {
+  const li = document.createElement('li');
+  li.className = 'timeline-entry timeline-entry--detonation';
+  const head = document.createElement('div');
+  head.className = 'timeline-entry__head';
+  head.append(span('', 'detonation'), span('', formatTime(entry.timestamp)));
+  const body = document.createElement('div');
+  body.className = 'timeline-entry__body';
+  body.textContent = entry.url;
+  const meta = document.createElement('div');
+  meta.className = 'req-meta';
+  meta.textContent = `container: ${entry.container}`;
+  li.append(head, body, meta);
+  for (const tag of entry.tags) li.append(renderTag(tag));
+  return li;
+}
+
 function renderEntry(entry: CaseEntry): HTMLLIElement {
   switch (entry.kind) {
     case 'note':
@@ -242,6 +274,8 @@ function renderEntry(entry: CaseEntry): HTMLLIElement {
       return renderDecoded(entry);
     case 'enrichment':
       return renderEnrichmentEntry(entry);
+    case 'detonation':
+      return renderDetonation(entry);
   }
 }
 
@@ -261,6 +295,9 @@ function matchesTextFilter(entry: CaseEntry): boolean {
       break;
     case 'enrichment':
       haystack = `${entry.indicator} ${entry.results.map((result) => result.summary).join(' ')}`;
+      break;
+    case 'detonation':
+      haystack = `${entry.url} ${entry.container}`;
       break;
   }
   return haystack.toLowerCase().includes(query);
@@ -420,6 +457,17 @@ async function addNote(): Promise<void> {
   await refresh();
 }
 
+async function openIsolated(url: string): Promise<void> {
+  const trimmed = url.trim();
+  if (trimmed === '') return;
+  const result = await sendRequest('detonate', { url: trimmed });
+  await refresh();
+  if (!result.recorded) {
+    ui.timelineEmpty.hidden = false;
+    ui.timelineEmpty.textContent = `Opened in "${result.container}" (no active case — not recorded).`;
+  }
+}
+
 /** Run an async action, surfacing failures instead of leaving the panel broken. */
 function run(context: string, action: Promise<void>): Promise<void> {
   return action.catch((error: unknown) => {
@@ -436,6 +484,11 @@ ui.btnNewCase.addEventListener('click', () => void run('create case', createCase
 ui.btnCloseCase.addEventListener('click', () => void run('close case', closeActiveCase()));
 ui.btnAddNote.addEventListener('click', () => void run('add note', addNote()));
 ui.btnLoadMore.addEventListener('click', () => void run('load more', loadMore()));
+ui.btnDetonate.addEventListener('click', () => {
+  const url = ui.detonateInput.value;
+  ui.detonateInput.value = '';
+  void run('detonate', openIsolated(url));
+});
 
 ui.btnCaptureToggle.addEventListener('click', () => {
   // Decide synchronously from cached state so the permission prompt (start) runs
@@ -453,7 +506,8 @@ ui.filterKind.addEventListener('change', () => {
     value === 'note' ||
     value === 'request' ||
     value === 'decoded-artifact' ||
-    value === 'enrichment'
+    value === 'enrichment' ||
+    value === 'detonation'
       ? value
       : 'all';
   if (state.activeCaseId !== null) {

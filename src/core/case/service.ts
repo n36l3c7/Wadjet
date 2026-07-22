@@ -18,6 +18,7 @@ import {
   type Case,
   type CaseEntry,
   type DecodedArtifactEntry,
+  type DetonationEntry,
   type EnrichmentEntry,
   type NoteEntry,
   type RequestEntry,
@@ -270,6 +271,32 @@ export class CaseService {
       indicator: params.indicator,
       indicatorType: params.indicatorType,
       results: [...params.results],
+    };
+    await this.#content.addEntry(entry);
+    return entry;
+  }
+
+  /**
+   * Record that a URL was detonated in a throwaway container, against an open
+   * case.
+   *
+   * @throws {CaseNotFoundError} If the case does not exist.
+   * @throws {CaseClosedError} If the case is closed.
+   */
+  async addDetonation(
+    caseId: string,
+    params: { url: string; container: string; cookieStoreId: string },
+  ): Promise<DetonationEntry> {
+    const target = await this.#requireOpenCase(caseId);
+    const entry: DetonationEntry = {
+      id: this.#newId(),
+      caseId: target.id,
+      kind: 'detonation',
+      timestamp: this.#now(),
+      tags: [],
+      url: params.url,
+      container: params.container,
+      cookieStoreId: params.cookieStoreId,
     };
     await this.#content.addEntry(entry);
     return entry;

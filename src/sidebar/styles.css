@@ -567,3 +567,54 @@ body {
 .provider__controls .btn {
   flex: 0 0 auto;
 }
+
+/* Throwaway container / detonation */
+.detonate {
+  border-top: 1px solid var(--border);
+  padding-top: var(--gap);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detonate__row {
+  display: flex;
+  gap: 6px;
+}
+
+.detonate__input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--text);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 8px;
+}
+
+.detonate__row .btn {
+  flex: 0 0 auto;
+}
+
+.detonate__caveat {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--danger);
+  line-height: 1.4;
+}
+
+.timeline-entry--detonation {
+  border-left-color: var(--danger);
+}
+
+.req-actions {
+  margin-top: 8px;
+}
+
+.req-action {
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+  padding: 3px 8px;
+}

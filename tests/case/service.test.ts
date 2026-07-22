@@ -301,3 +301,35 @@ describe('CaseService — enrichment', () => {
     ).rejects.toBeInstanceOf(CaseClosedError);
   });
 });
+
+describe('CaseService — detonation', () => {
+  let service: CaseService;
+
+  beforeEach(() => {
+    service = makeService();
+  });
+
+  it('records a detonation against an open case', async () => {
+    const created = await service.createCase('detonate');
+    const entry = await service.addDetonation(created.id, {
+      url: 'https://evil.example',
+      container: 'Wadjet throwaway ab12',
+      cookieStoreId: 'firefox-container-9',
+    });
+    expect(entry.kind).toBe('detonation');
+    expect(entry.url).toBe('https://evil.example');
+    expect(entry.container).toBe('Wadjet throwaway ab12');
+  });
+
+  it('refuses a closed case', async () => {
+    const created = await service.createCase('detonate');
+    await service.closeCase(created.id);
+    await expect(
+      service.addDetonation(created.id, {
+        url: 'https://evil.example',
+        container: 'c',
+        cookieStoreId: 's',
+      }),
+    ).rejects.toBeInstanceOf(CaseClosedError);
+  });
+});
