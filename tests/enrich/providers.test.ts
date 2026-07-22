@@ -23,6 +23,7 @@ describe('VirusTotal provider', () => {
     expect(parsed.ok).toBe(true);
     expect(parsed.summary).toContain('3/90');
     expect(parsed.link).toContain('example.com');
+    expect(parsed.severity).toBe('malicious');
   });
 
   it('flags an invalid key on 401', () => {
@@ -43,6 +44,7 @@ describe('OTX provider', () => {
     const parsed = otxProvider.parse('example.com', 'domain', 200, body);
     expect(parsed.summary).toContain('2 OTX');
     expect(parsed.facts.some((fact) => fact.value.includes('Campaign A'))).toBe(true);
+    expect(parsed.severity).toBe('suspicious');
   });
 
   it('does not support url', () => {
@@ -64,5 +66,6 @@ describe('AbuseIPDB provider', () => {
     const parsed = abuseIpdbProvider.parse('1.2.3.4', 'ip', 200, body);
     expect(parsed.summary).toContain('42%');
     expect(parsed.link).toContain('1.2.3.4');
+    expect(parsed.severity).toBe('suspicious');
   });
 });

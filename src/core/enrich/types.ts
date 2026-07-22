@@ -20,6 +20,13 @@ export interface EnrichmentFact {
   readonly value: string;
 }
 
+/**
+ * A provider's own severity read for an indicator, derived deterministically
+ * from that provider's data. It is never combined across providers into an
+ * aggregate verdict — each card is coloured by its own provider only.
+ */
+export type Severity = 'clean' | 'suspicious' | 'malicious' | 'unknown';
+
 /** The parsed content of a provider response (no envelope). */
 export interface ProviderParse {
   /** Whether the lookup produced usable data (false for auth/errors). */
@@ -30,6 +37,8 @@ export interface ProviderParse {
   readonly facts: EnrichmentFact[];
   /** Provider permalink for the indicator, if any. */
   readonly link: string | null;
+  /** This provider's own severity read (not an aggregate). */
+  readonly severity: Severity;
 }
 
 /** A provider result, as stored on a case and shown in the UI. */

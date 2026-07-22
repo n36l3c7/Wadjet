@@ -8,6 +8,28 @@ During the `0.x` series, each wave maps to a minor version.
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-07-23
+
+### Added
+
+- **Wave 9 — Usability & codecs.**
+- Encoders alongside the decoders (base64, URL, hex, unicode) and defang/refang
+  for IOCs, exposed as a single set of codec operations.
+- The inline overlay is now an **editable conversion chain**: append suggested or
+  manual operations, remove any step (even mid-chain), or drag to reorder; the
+  result recomputes from the original.
+- "Enrich selection" opens an **in-page overlay** with per-provider results
+  (previously it attached silently).
+- Per-provider **severity** on enrichment results (clean / suspicious /
+  malicious / unknown), derived deterministically from each provider's own data,
+  used to colour that provider's card. There is no aggregate verdict.
+- Collapsible **Cases** and **Tools** sections in the sidebar.
+
+### Changed
+
+- The decoder detection now yields codec operation ids (e.g. `base64-decode`) and
+  also suggests `refang` for defanged input.
+
 ## [0.8.0] - 2026-07-23
 
 ### Added
@@ -168,7 +190,8 @@ During the `0.x` series, each wave maps to a minor version.
   `web-ext lint` on every push and pull request.
 - Documentation: README, CONTRIBUTING, and SECURITY.
 
-[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/n36l3c7/Wadjet/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/n36l3c7/Wadjet/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/n36l3c7/Wadjet/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/n36l3c7/Wadjet/compare/v0.5.0...v0.6.0

@@ -10,9 +10,16 @@
  */
 import type { EnrichmentEntry } from '../core/case/types';
 import type { LookupOutcome } from '../core/enrich/service';
-import type { EnrichmentResult, ProviderId } from '../core/enrich/types';
+import type { EnrichmentResult, ProviderId, Severity } from '../core/enrich/types';
 import { sendRequest } from '../core/messaging/client';
 import type { SettingsView } from '../core/settings/store';
+
+const SEVERITY_COLOR: Record<Severity, string> = {
+  clean: '#7fbf7f',
+  suspicious: '#e0b23c',
+  malicious: '#d9534f',
+  unknown: '#24384c',
+};
 
 function must<E extends Element>(selector: string): E {
   const element = document.querySelector<E>(selector);
@@ -41,9 +48,13 @@ function providerLink(url: string): HTMLAnchorElement | null {
 function renderResultCard(result: EnrichmentResult): HTMLElement {
   const card = document.createElement('div');
   card.className = 'enrich-card';
+  card.style.borderLeftColor = SEVERITY_COLOR[result.severity];
   const head = document.createElement('div');
   head.className = 'enrich-card__head';
   head.append(span('enrich-card__provider', result.provider));
+  const severity = span('enrich-card__sev', result.severity);
+  severity.style.color = SEVERITY_COLOR[result.severity];
+  head.append(severity);
   if (!result.ok) head.append(span('enrich-card__bad', 'error'));
   const link = result.link !== null ? providerLink(result.link) : null;
   if (link) head.append(link);

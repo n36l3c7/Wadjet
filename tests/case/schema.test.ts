@@ -180,6 +180,7 @@ const validEnrichment: EnrichmentEntry = {
       summary: '0/90 engines flagged malicious.',
       facts: [{ label: 'Malicious', value: '0 / 90' }],
       link: 'https://www.virustotal.com/gui/domain/example.com',
+      severity: 'clean',
     },
   ],
 };

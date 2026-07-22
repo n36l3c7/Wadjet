@@ -162,26 +162,6 @@ async function detonateUrl(url: string): Promise<{ container: string; recorded: 
   return { container: outcome.container, recorded: true };
 }
 
-/** Enrich a selection (from the context menu) and attach it to the active case. */
-async function enrichSelection(selectionText: string): Promise<void> {
-  const { service, enrichment } = await getContext();
-  const active = await service.getActiveCase();
-  if (active === undefined) {
-    console.info('[wadjet] enrich: no active case to attach to.');
-    return;
-  }
-  const outcome = await enrichment.lookup(selectionText);
-  if (outcome.indicatorType === null || outcome.results.length === 0) {
-    console.info('[wadjet] enrich: nothing to attach (unclassifiable or no providers configured).');
-    return;
-  }
-  await service.addEnrichment(active.id, {
-    indicator: outcome.indicator,
-    indicatorType: outcome.indicatorType,
-    results: outcome.results,
-  });
-}
-
 /** Structural guard for inbound messages. */
 function isAnyRequest(value: unknown): value is AnyRequest {
   return (
@@ -358,11 +338,6 @@ browser.runtime.onMessage.addListener((message: unknown): Promise<Response<Reque
 
 // Register the selection context menus (decode overlay + enrich).
 registerContextMenus({
-  onEnrich: (selectionText) => {
-    void enrichSelection(selectionText).catch((error: unknown) => {
-      console.error('[wadjet] enrich selection failed:', error);
-    });
-  },
   onDetonate: (url) => {
     void detonateUrl(url).catch((error: unknown) => {
       console.error('[wadjet] detonation failed:', error);

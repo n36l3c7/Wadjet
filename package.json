@@ -1,6 +1,6 @@
 {
   "name": "wadjet",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Firefox WebExtension that turns the browser into a case-bound investigation console for security analysts.",
   "private": true,
   "type": "module",

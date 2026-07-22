@@ -31,6 +31,7 @@ function fakeProvider(id: ProviderId, supported: string): EnrichmentProvider {
       summary: `status ${String(status)}`,
       facts: [],
       link: null,
+      severity: 'unknown',
     }),
   };
 }

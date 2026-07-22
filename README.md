@@ -16,20 +16,18 @@ reimplement them. See [Non-goals](#non-goals).
 
 ## Status
 
-**v0.8.0 — Native host.** An **optional** Python native-messaging host adds a
-SQLite case archive, filesystem evidence (the export bundle written to disk), and
-a small allowlist of local tools (`whois`, `exiftool`, `yara`) run on validated
-inputs. The extension stays fully functional without it. See
-[`native-host/`](native-host/) to install it. Tool output attaches to the case as
-a `tool-result` entry.
+**v0.9.0 — Usability & codecs.** The inline overlay becomes an **editable
+conversion chain**: decode, encode, and defang/refang operations applied to the
+selection, any step removable (even mid-chain) or reorderable, recomputed each
+time. "Enrich selection" now shows results in an **in-page overlay**, and each
+provider card is **coloured by that provider's own severity** (clean / suspicious
+/ malicious — never an aggregate verdict). The sidebar's **Cases** and **Tools**
+sections are collapsible.
 
-Earlier waves: **v0.7.0** DevTools panel; **v0.6.0** export; **v0.5.0** isolated
-detonation; **v0.4.0** enrichment; **v0.3.0** inline decoders; **v0.2.0** opt-in
-traffic capture; **v0.1.0** the Foundation. See [`CHANGELOG.md`](CHANGELOG.md).
-
-> Note: the native host is a separate program that runs local tools. It never
-> uses a shell (argument arrays only), runs only the three allowlisted tools on
-> validated inputs, and confines file access to its data directory.
+Earlier waves: **v0.8.0** native host; **v0.7.0** DevTools panel; **v0.6.0**
+export; **v0.5.0** isolated detonation; **v0.4.0** enrichment; **v0.3.0** inline
+decoders; **v0.2.0** opt-in traffic capture; **v0.1.0** the Foundation. See
+[`CHANGELOG.md`](CHANGELOG.md).
 
 ## Requirements
 

@@ -52,16 +52,40 @@ export const virusTotalProvider: EnrichmentProvider = {
   parse(indicator, type, status, body): ProviderParse {
     const link = guiLink(type, indicator);
     if (status === 401) {
-      return { ok: false, summary: 'VirusTotal: invalid API key.', facts: [], link: null };
+      return {
+        ok: false,
+        summary: 'VirusTotal: invalid API key.',
+        facts: [],
+        link: null,
+        severity: 'unknown',
+      };
     }
     if (status === 404) {
-      return { ok: true, summary: 'Not found in VirusTotal.', facts: [], link };
+      return {
+        ok: true,
+        summary: 'Not found in VirusTotal.',
+        facts: [],
+        link,
+        severity: 'unknown',
+      };
     }
     if (status === 429) {
-      return { ok: false, summary: 'VirusTotal: rate limit exceeded.', facts: [], link: null };
+      return {
+        ok: false,
+        summary: 'VirusTotal: rate limit exceeded.',
+        facts: [],
+        link: null,
+        severity: 'unknown',
+      };
     }
     if (status !== 200) {
-      return { ok: false, summary: `VirusTotal: HTTP ${String(status)}.`, facts: [], link: null };
+      return {
+        ok: false,
+        summary: `VirusTotal: HTTP ${String(status)}.`,
+        facts: [],
+        link: null,
+        severity: 'unknown',
+      };
     }
 
     const attributes = asRecord(asRecord(asRecord(body)?.data)?.attributes);
@@ -81,11 +105,14 @@ export const virusTotalProvider: EnrichmentProvider = {
     const asOwner = strAt(attributes, 'as_owner');
     if (asOwner !== null) facts.push({ label: 'AS owner', value: asOwner });
 
+    const severity =
+      malicious >= 3 ? 'malicious' : malicious + suspicious > 0 ? 'suspicious' : 'clean';
     return {
       ok: true,
       summary: `${String(malicious)}/${String(total)} engines flagged malicious.`,
       facts,
       link,
+      severity,
     };
   },
 };

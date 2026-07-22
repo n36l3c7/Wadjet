@@ -151,6 +151,7 @@ export class EnrichmentService {
       summary: message,
       facts: [],
       link: null,
+      severity: 'unknown',
     };
   }
 }

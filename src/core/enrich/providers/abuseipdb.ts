@@ -26,13 +26,31 @@ export const abuseIpdbProvider: EnrichmentProvider = {
   parse(indicator, _type, status, body): ProviderParse {
     const link = `https://www.abuseipdb.com/check/${indicator}`;
     if (status === 401) {
-      return { ok: false, summary: 'AbuseIPDB: invalid API key.', facts: [], link: null };
+      return {
+        ok: false,
+        summary: 'AbuseIPDB: invalid API key.',
+        facts: [],
+        link: null,
+        severity: 'unknown',
+      };
     }
     if (status === 429) {
-      return { ok: false, summary: 'AbuseIPDB: rate limit exceeded.', facts: [], link: null };
+      return {
+        ok: false,
+        summary: 'AbuseIPDB: rate limit exceeded.',
+        facts: [],
+        link: null,
+        severity: 'unknown',
+      };
     }
     if (status !== 200) {
-      return { ok: false, summary: `AbuseIPDB: HTTP ${String(status)}.`, facts: [], link: null };
+      return {
+        ok: false,
+        summary: `AbuseIPDB: HTTP ${String(status)}.`,
+        facts: [],
+        link: null,
+        severity: 'unknown',
+      };
     }
 
     const data = asRecord(asRecord(body)?.data);
@@ -52,6 +70,7 @@ export const abuseIpdbProvider: EnrichmentProvider = {
       summary: `Abuse confidence ${String(score)}% (${String(reports)} reports in 90 days).`,
       facts,
       link,
+      severity: score > 75 ? 'malicious' : score >= 25 ? 'suspicious' : 'clean',
     };
   },
 };

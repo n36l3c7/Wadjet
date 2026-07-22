@@ -39,13 +39,25 @@ export const otxProvider: EnrichmentProvider = {
   parse(indicator, type, status, body): ProviderParse {
     const link = `${GUI}/${section(type, indicator).guiType}/${indicator}`;
     if (status === 403) {
-      return { ok: false, summary: 'OTX: invalid API key.', facts: [], link: null };
+      return {
+        ok: false,
+        summary: 'OTX: invalid API key.',
+        facts: [],
+        link: null,
+        severity: 'unknown',
+      };
     }
     if (status === 404) {
-      return { ok: true, summary: 'Not found in OTX.', facts: [], link };
+      return { ok: true, summary: 'Not found in OTX.', facts: [], link, severity: 'unknown' };
     }
     if (status !== 200) {
-      return { ok: false, summary: `OTX: HTTP ${String(status)}.`, facts: [], link: null };
+      return {
+        ok: false,
+        summary: `OTX: HTTP ${String(status)}.`,
+        facts: [],
+        link: null,
+        severity: 'unknown',
+      };
     }
 
     const pulseInfo = asRecord(asRecord(body)?.pulse_info);
@@ -68,6 +80,7 @@ export const otxProvider: EnrichmentProvider = {
           : 'No OTX pulses reference this.',
       facts,
       link,
+      severity: count > 0 ? 'suspicious' : 'clean',
     };
   },
 };

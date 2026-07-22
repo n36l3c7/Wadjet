@@ -22,6 +22,7 @@ function enrichmentResult(): EnrichmentResult {
     summary: '0/90 engines flagged malicious.',
     facts: [],
     link: null,
+    severity: 'clean',
   };
 }
 

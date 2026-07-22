@@ -17,30 +17,29 @@ const DECODE_ID = 'wadjet-decode-selection';
 const ENRICH_ID = 'wadjet-enrich-selection';
 const DETONATE_ID = 'wadjet-detonate';
 const OVERLAY_FILE = 'content/overlay.js';
+const ENRICH_OVERLAY_FILE = 'content/enrich-overlay.js';
 
 /** Handlers the background provides for menu actions. */
 export interface ContextMenuHandlers {
-  /** Enrich a selected indicator and attach it to the active case. */
-  readonly onEnrich: (selectionText: string) => void;
   /** Open a link or selected URL in a throwaway container. */
   readonly onDetonate: (url: string) => void;
 }
 
-function injectOverlay(tabId: number): void {
+function injectScript(tabId: number, file: string): void {
   void browser.scripting
-    .executeScript({ target: { tabId }, files: [OVERLAY_FILE] })
+    .executeScript({ target: { tabId }, files: [file] })
     .catch((error: unknown) => {
-      console.error('[wadjet] failed to inject the decoder overlay:', error);
+      console.error(`[wadjet] failed to inject ${file}:`, error);
     });
 }
 
-/** Register both context-menu items and their click handler. */
+/** Register the context-menu items and their click handler. */
 export function registerContextMenus(handlers: ContextMenuHandlers): void {
   browser.menus.onClicked.addListener((info, tab) => {
     if (info.menuItemId === DECODE_ID) {
-      if (tab?.id !== undefined) injectOverlay(tab.id);
+      if (tab?.id !== undefined) injectScript(tab.id, OVERLAY_FILE);
     } else if (info.menuItemId === ENRICH_ID) {
-      handlers.onEnrich(info.selectionText ?? '');
+      if (tab?.id !== undefined) injectScript(tab.id, ENRICH_OVERLAY_FILE);
     } else if (info.menuItemId === DETONATE_ID) {
       handlers.onDetonate(info.linkUrl ?? info.selectionText ?? '');
     }

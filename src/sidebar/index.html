@@ -21,98 +21,106 @@
         <button type="button" id="btn-close-case" class="btn" disabled>Close case</button>
       </section>
 
-      <section class="cases" aria-label="Cases">
-        <h2 class="section__title">Cases</h2>
+      <details class="cases collapsible" open>
+        <summary class="section__title collapsible__summary">Cases</summary>
         <ul class="cases__list" id="cases-list"></ul>
         <p class="empty" id="cases-empty">No cases yet. Create one to begin.</p>
-      </section>
+      </details>
 
-      <section class="capture" aria-label="Traffic capture" id="capture" hidden>
-        <h2 class="section__title">Traffic capture</h2>
-        <div class="capture__row">
-          <button type="button" id="btn-capture-toggle" class="btn">Start capture</button>
-          <span class="capture__status" id="capture-status">Idle</span>
-        </div>
-        <label class="capture__retain">
-          <input type="checkbox" id="capture-retain" />
-          Retain sensitive header values (raw)
-        </label>
-        <p class="capture__hint" id="capture-hint">
-          Starting capture asks, once, for permission to read requests on all sites. Sensitive
-          headers are redacted unless you opt in above.
-        </p>
-      </section>
+      <details class="tools collapsible" open>
+        <summary class="section__title collapsible__summary">Tools</summary>
 
-      <section class="enrich" aria-label="Enrichment">
-        <h2 class="section__title">Enrichment</h2>
-        <div class="enrich__row">
-          <input
-            id="enrich-input"
-            class="enrich__input"
-            type="text"
-            placeholder="domain / IP / hash / URL"
-          />
-          <button type="button" id="btn-enrich" class="btn btn--primary">Enrich</button>
-        </div>
-        <div class="enrich__results" id="enrich-results"></div>
-        <details class="providers">
-          <summary class="providers__summary">Providers &amp; API keys</summary>
-          <div id="providers-list"></div>
-        </details>
-      </section>
+        <section class="capture" aria-label="Traffic capture" id="capture" hidden>
+          <h2 class="section__title">Traffic capture</h2>
+          <div class="capture__row">
+            <button type="button" id="btn-capture-toggle" class="btn">Start capture</button>
+            <span class="capture__status" id="capture-status">Idle</span>
+          </div>
+          <label class="capture__retain">
+            <input type="checkbox" id="capture-retain" />
+            Retain sensitive header values (raw)
+          </label>
+          <p class="capture__hint" id="capture-hint">
+            Starting capture asks, once, for permission to read requests on all sites. Sensitive
+            headers are redacted unless you opt in above.
+          </p>
+        </section>
 
-      <section class="detonate" aria-label="Throwaway container">
-        <h2 class="section__title">Throwaway container</h2>
-        <div class="detonate__row">
-          <input
-            id="detonate-input"
-            class="detonate__input"
-            type="text"
-            placeholder="https://suspicious.example/…"
-          />
-          <button type="button" id="btn-detonate" class="btn">Open isolated</button>
-        </div>
-        <p class="detonate__caveat">
-          Isolates cookies &amp; storage only — <strong>not</strong> a network, process, or exploit
-          sandbox. The page still runs in your Firefox, on your network.
-        </p>
-      </section>
+        <section class="enrich" aria-label="Enrichment">
+          <h2 class="section__title">Enrichment</h2>
+          <div class="enrich__row">
+            <input
+              id="enrich-input"
+              class="enrich__input"
+              type="text"
+              placeholder="domain / IP / hash / URL"
+            />
+            <button type="button" id="btn-enrich" class="btn btn--primary">Enrich</button>
+          </div>
+          <div class="enrich__results" id="enrich-results"></div>
+          <details class="providers">
+            <summary class="providers__summary">Providers &amp; API keys</summary>
+            <div id="providers-list"></div>
+          </details>
+        </section>
 
-      <section class="export" aria-label="Export" id="export" hidden>
-        <h2 class="section__title">Export case</h2>
-        <div class="export__row">
-          <select id="export-format" class="export__format" aria-label="Export format">
-            <option value="markdown">Markdown report</option>
-            <option value="har">HAR (requests)</option>
-            <option value="csv">CSV (IOCs)</option>
-            <option value="json">JSON (full)</option>
-          </select>
-          <button type="button" id="btn-export-download" class="btn btn--primary">Download</button>
-          <button type="button" id="btn-export-copy" class="btn">Copy</button>
-        </div>
-      </section>
+        <section class="detonate" aria-label="Throwaway container">
+          <h2 class="section__title">Throwaway container</h2>
+          <div class="detonate__row">
+            <input
+              id="detonate-input"
+              class="detonate__input"
+              type="text"
+              placeholder="https://suspicious.example/…"
+            />
+            <button type="button" id="btn-detonate" class="btn">Open isolated</button>
+          </div>
+          <p class="detonate__caveat">
+            Isolates cookies &amp; storage only — <strong>not</strong> a network, process, or
+            exploit sandbox. The page still runs in your Firefox, on your network.
+          </p>
+        </section>
 
-      <section class="native" aria-label="Native host">
-        <h2 class="section__title">
-          Native host <span id="native-status" class="native__status">checking…</span>
-        </h2>
-        <div class="native__row">
-          <button type="button" id="btn-archive" class="btn" disabled>Archive case to host</button>
-        </div>
-        <div class="native__row">
-          <select id="tool-select" class="tool-select" aria-label="Tool">
-            <option value="whois">whois</option>
-            <option value="exiftool">exiftool</option>
-            <option value="yara">yara</option>
-          </select>
-          <input id="tool-input" class="tool-input" type="text" placeholder="indicator / path" />
-          <button type="button" id="btn-run-tool" class="btn">Run</button>
-        </div>
-        <p class="native__hint">
-          Optional. Requires the <code>wadjet_host</code> helper installed — see
-          <code>native-host/</code>.
-        </p>
-      </section>
+        <section class="export" aria-label="Export" id="export" hidden>
+          <h2 class="section__title">Export case</h2>
+          <div class="export__row">
+            <select id="export-format" class="export__format" aria-label="Export format">
+              <option value="markdown">Markdown report</option>
+              <option value="har">HAR (requests)</option>
+              <option value="csv">CSV (IOCs)</option>
+              <option value="json">JSON (full)</option>
+            </select>
+            <button type="button" id="btn-export-download" class="btn btn--primary">
+              Download
+            </button>
+            <button type="button" id="btn-export-copy" class="btn">Copy</button>
+          </div>
+        </section>
+
+        <section class="native" aria-label="Native host">
+          <h2 class="section__title">
+            Native host <span id="native-status" class="native__status">checking…</span>
+          </h2>
+          <div class="native__row">
+            <button type="button" id="btn-archive" class="btn" disabled>
+              Archive case to host
+            </button>
+          </div>
+          <div class="native__row">
+            <select id="tool-select" class="tool-select" aria-label="Tool">
+              <option value="whois">whois</option>
+              <option value="exiftool">exiftool</option>
+              <option value="yara">yara</option>
+            </select>
+            <input id="tool-input" class="tool-input" type="text" placeholder="indicator / path" />
+            <button type="button" id="btn-run-tool" class="btn">Run</button>
+          </div>
+          <p class="native__hint">
+            Optional. Requires the <code>wadjet_host</code> helper installed — see
+            <code>native-host/</code>.
+          </p>
+        </section>
+      </details>
 
       <section class="timeline" aria-label="Case timeline">
         <div class="timeline__head">

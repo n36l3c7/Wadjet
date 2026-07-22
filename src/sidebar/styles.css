@@ -461,8 +461,15 @@ body {
   padding: 6px 8px;
   background: var(--bg-elev);
   border: 1px solid var(--border);
-  border-left: 3px solid #7fbf7f;
+  border-left: 3px solid var(--border);
   border-radius: var(--radius);
+}
+
+.enrich-card__sev {
+  margin-left: auto;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .enrich-card__head {
@@ -498,7 +505,7 @@ body {
 }
 
 .enrich-link {
-  margin-left: auto;
+  margin-left: 6px;
   font-size: 0.7rem;
   color: var(--accent);
 }
@@ -723,4 +730,29 @@ body {
 
 .timeline-entry--tool > details {
   padding: 8px 10px;
+}
+
+/* Collapsible sections */
+.collapsible {
+  margin: 0;
+}
+
+.collapsible__summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 2px 0;
+  margin: 0;
+}
+
+.collapsible__summary::-webkit-details-marker {
+  display: none;
+}
+
+.collapsible__summary::before {
+  content: '▾ ';
+  color: var(--text-dim);
+}
+
+.collapsible:not([open]) .collapsible__summary::before {
+  content: '▸ ';
 }
