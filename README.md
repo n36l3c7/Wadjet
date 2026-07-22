@@ -1,5 +1,9 @@
 # Wadjet
 
+<p align="center">
+  <img src="assets/wadjet-banner.svg" alt="Wadjet — case-bound investigation console for security analysts" width="100%" />
+</p>
+
 A Firefox WebExtension that turns the browser into a **case-bound investigation
 console** for security analysts. Everything an analyst touches during an
 analysis — requests, decoded payloads, enrichment verdicts, screenshots, notes —
@@ -16,9 +20,11 @@ reimplement them. See [Non-goals](#non-goals).
 
 ## Status
 
-**v1.0.0 — first release.** The full 0.x line, hardened: a permission audit, a
-documented [threat model](THREAT_MODEL.md), a security-review pass, a reviewed
-AMO data-collection declaration, and an automated signing/submission step in CI.
+**v1.1.0.** Adds the project's visual identity — the _uraeus_ mark (with a
+compact build for small sizes) and the README banner — on top of the hardened
+**v1.0.0** first release: a permission audit, a documented
+[threat model](THREAT_MODEL.md), a security-review pass, a reviewed AMO
+data-collection declaration, and an automated signing/submission step in CI.
 
 What Wadjet does: bind everything an analyst touches to a **case** — captured
 requests (redacted), inline **codec** conversions, on-demand **enrichment**,

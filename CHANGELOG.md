@@ -8,6 +8,18 @@ During the `0.x` series, each wave maps to a minor version.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-07-23
+
+### Added
+
+- **Wave 11 — Branding.**
+- A visual identity: the _uraeus_ (rearing cobra) mark in its protective ring,
+  drawn as vector, with a **compact build** (ring and fine detail dropped, the
+  silhouette enlarged) that stays legible at 16–32 px. Wired into the toolbar and
+  sidebar icons (`icons` and `sidebar_action`, mapped per size), the DevTools
+  panel tab, and the sidebar header.
+- A README banner ([`assets/wadjet-banner.svg`](assets/wadjet-banner.svg)).
+
 ## [1.0.0] - 2026-07-23
 
 ### Added
@@ -20,6 +32,9 @@ During the `0.x` series, each wave maps to a minor version.
   so Firefox asks for consent when that feature is used.
 - An AMO **signing/submission** step in the release workflow, run automatically
   when the `AMO_JWT_ISSUER` / `AMO_JWT_SECRET` repository secrets are configured.
+- A stable, UUID-form extension **id** (the original was retired by AMO on
+  deletion, which permanently reserves the id); the native-messaging
+  `allowed_extensions` matches it.
 
 ### Security
 
@@ -210,7 +225,8 @@ During the `0.x` series, each wave maps to a minor version.
   `web-ext lint` on every push and pull request.
 - Documentation: README, CONTRIBUTING, and SECURITY.
 
-[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/n36l3c7/Wadjet/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/n36l3c7/Wadjet/compare/v0.9.0...v1.0.0
 [0.9.0]: https://github.com/n36l3c7/Wadjet/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/n36l3c7/Wadjet/compare/v0.7.0...v0.8.0

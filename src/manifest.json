@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Wadjet",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Case-bound investigation console for security analysts.",
   "browser_specific_settings": {
     "gecko": {
@@ -14,8 +14,11 @@
     }
   },
   "icons": {
+    "16": "icons/wadjet-compact.svg",
+    "32": "icons/wadjet-compact.svg",
     "48": "icons/wadjet.svg",
-    "96": "icons/wadjet.svg"
+    "96": "icons/wadjet.svg",
+    "128": "icons/wadjet.svg"
   },
   "permissions": [
     "storage",
@@ -42,6 +45,10 @@
   "sidebar_action": {
     "default_title": "Wadjet",
     "default_panel": "sidebar/index.html",
-    "default_icon": "icons/wadjet.svg"
+    "default_icon": {
+      "16": "icons/wadjet-compact.svg",
+      "32": "icons/wadjet-compact.svg",
+      "48": "icons/wadjet.svg"
+    }
   }
 }

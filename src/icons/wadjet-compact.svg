@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Wadjet">
+  <!-- Wadjet — compact build of the uraeus for small sizes (16-32px: toolbar,
+       tab, sidebar switcher). Ring and hood-marking dropped; silhouette
+       enlarged with bolder eyes so it survives at favicon size. -->
+  <rect width="96" height="96" rx="20" fill="#0d1526" />
+  <g transform="translate(8 9) scale(1.25)">
+    <path
+      d="M32 47 C24 46 14 40 10 30 C8 24 10 18 15 16 C19 14 24 15 27 17 L37 17 C40 15 45 14 49 16 C54 18 56 24 54 30 C50 40 40 46 32 47 Z"
+      fill="#e8b24c"
+    />
+    <path
+      d="M32 9 C37 9 40 12 40 16 C40 20 36 22 32 22 C28 22 24 20 24 16 C24 12 27 9 32 9 Z"
+      fill="#e8b24c"
+    />
+    <ellipse cx="28.2" cy="15.4" rx="1.9" ry="2.4" fill="#0d1526" />
+    <ellipse cx="35.8" cy="15.4" rx="1.9" ry="2.4" fill="#0d1526" />
+  </g>
+</svg>

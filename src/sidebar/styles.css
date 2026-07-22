@@ -39,11 +39,24 @@ body {
 
 .app__header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--gap);
   border-bottom: 1px solid var(--border);
   padding-bottom: var(--gap);
+}
+
+.app__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.app__logo {
+  display: block;
+  width: 26px;
+  height: 26px;
+  flex: none;
 }
 
 .app__title {
