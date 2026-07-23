@@ -25,6 +25,7 @@ const ENTRY_KINDS: readonly CaseEntryKind[] = [
   'detonation',
   'page-analysis',
   'tool-result',
+  'threat-finding',
 ];
 const REQUEST_OUTCOMES = ['completed', 'error'] as const;
 
@@ -144,6 +145,27 @@ function isToolResultShape(value: Record<string, unknown>): boolean {
   );
 }
 
+function isThreatSignalShape(value: unknown): boolean {
+  return (
+    isRecord(value) &&
+    typeof value.id === 'string' &&
+    typeof value.kind === 'string' &&
+    typeof value.severity === 'string' &&
+    typeof value.title === 'string' &&
+    typeof value.explanation === 'string'
+  );
+}
+
+function isThreatFindingShape(value: Record<string, unknown>): boolean {
+  return (
+    typeof value.url === 'string' &&
+    Array.isArray(value.signals) &&
+    value.signals.every(isThreatSignalShape) &&
+    Array.isArray(value.enrichment) &&
+    (value.domainAgeDays === null || typeof value.domainAgeDays === 'number')
+  );
+}
+
 function isDetonationShape(value: Record<string, unknown>): boolean {
   return (
     typeof value.url === 'string' &&
@@ -224,6 +246,8 @@ export function isCaseEntry(value: unknown): value is CaseEntry {
       return isPageAnalysisShape(value);
     case 'tool-result':
       return isToolResultShape(value);
+    case 'threat-finding':
+      return isThreatFindingShape(value);
     default:
       return false;
   }

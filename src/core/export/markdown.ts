@@ -34,6 +34,12 @@ function summarize(entry: CaseEntry): string {
     }
     case 'tool-result':
       return `${entry.tool} (${entry.input}) → exit ${String(entry.exitCode)}: ${collapse(entry.output, 120)}`;
+    case 'threat-finding': {
+      const high = entry.signals.filter((signal) => signal.severity === 'high').length;
+      return `${entry.url} — ${String(entry.signals.length)} threat signal(s)${
+        high > 0 ? `, ${String(high)} high` : ''
+      }: ${entry.signals.map((signal) => signal.title).join('; ')}`;
+    }
   }
 }
 

@@ -14,7 +14,9 @@ import { IdbEnrichmentCache } from '../core/enrich/cache';
 import { PROVIDERS } from '../core/enrich/providers';
 import { TokenBucket } from '../core/enrich/rate-limit';
 import { EnrichmentService } from '../core/enrich/service';
-import type { ProviderId } from '../core/enrich/types';
+import type { EnrichmentResult, ProviderId } from '../core/enrich/types';
+import { parseDomainAgeDays } from '../core/threat/domain-age';
+import type { ThreatAugmentation, ThreatSignal } from '../core/threat/types';
 import { EXPORT_FORMATS, buildExport } from '../core/export';
 import type { AnyRequest, Response, RequestType } from '../core/messaging/protocol';
 import type { NativeArchiveFile } from '../core/native/protocol';
@@ -27,6 +29,7 @@ import { registerContextMenus } from './context-menus';
 import { DetonationManager } from './detonation';
 import { NativeHost } from './native-host';
 import { SecurityInfoCollector } from './security-info';
+import { ThreatProtection } from './threat-protection';
 import { TrafficCapture } from './traffic-capture';
 
 /** Encode a UTF-8 string as base64 (for native-host evidence files). */
@@ -94,6 +97,7 @@ interface BackgroundContext {
   readonly detonation: DetonationManager;
   readonly securityInfo: SecurityInfoCollector;
   readonly nativeHost: NativeHost;
+  readonly threatProtection: ThreatProtection;
 }
 
 let contextPromise: Promise<BackgroundContext> | null = null;
@@ -127,7 +131,18 @@ function getContext(): Promise<BackgroundContext> {
     const securityInfo = new SecurityInfoCollector();
     await securityInfo.init();
     const nativeHost = new NativeHost();
-    return { service, capture, enrichment, settings, detonation, securityInfo, nativeHost };
+    const threatProtection = new ThreatProtection(area);
+    await threatProtection.init();
+    return {
+      service,
+      capture,
+      enrichment,
+      settings,
+      detonation,
+      securityInfo,
+      nativeHost,
+      threatProtection,
+    };
   })();
   return contextPromise;
 }
@@ -162,6 +177,56 @@ async function detonateUrl(url: string): Promise<{ container: string; recorded: 
   return { container: outcome.container, recorded: true };
 }
 
+function hostnameOf(url: string): string | null {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Augment an on-page threat report with gated context and record it against the
+ * active case. Enrichment runs only when a provider is configured (the service
+ * gates on keys); domain age runs only when the native host answers.
+ */
+async function reportThreat(
+  url: string,
+  signals: ThreatSignal[],
+): Promise<{ augmentation: ThreatAugmentation; recorded: boolean }> {
+  const { service, enrichment, nativeHost } = await getContext();
+  const hostname = hostnameOf(url);
+
+  let enrichmentResults: EnrichmentResult[] = [];
+  if (hostname !== null) {
+    const outcome = await enrichment.lookup(hostname).catch(() => null);
+    if (outcome !== null) enrichmentResults = outcome.results;
+  }
+
+  let domainAgeDays: number | null = null;
+  if (hostname !== null) {
+    domainAgeDays = await nativeHost
+      .ping()
+      .then(() => nativeHost.tool('whois', hostname))
+      .then((result) => parseDomainAgeDays(result.output))
+      .catch(() => null);
+  }
+
+  const active = await service.getActiveCase();
+  let recorded = false;
+  if (active !== undefined && active.status === 'open') {
+    await service.addThreatFinding(active.id, {
+      url,
+      signals,
+      enrichment: enrichmentResults,
+      domainAgeDays,
+    });
+    recorded = true;
+  }
+
+  return { augmentation: { enrichment: enrichmentResults, domainAgeDays }, recorded };
+}
+
 /** Structural guard for inbound messages. */
 function isAnyRequest(value: unknown): value is AnyRequest {
   return (
@@ -175,7 +240,8 @@ function isAnyRequest(value: unknown): value is AnyRequest {
 
 /** Route a validated request to the appropriate service. */
 async function dispatch(req: AnyRequest): Promise<Response<RequestType>> {
-  const { service, capture, enrichment, settings, securityInfo, nativeHost } = await getContext();
+  const { service, capture, enrichment, settings, securityInfo, nativeHost, threatProtection } =
+    await getContext();
   switch (req.type) {
     case 'case.list':
       return { ok: true, data: await service.listCases() };
@@ -254,6 +320,12 @@ async function dispatch(req: AnyRequest): Promise<Response<RequestType>> {
     }
     case 'tls.get':
       return { ok: true, data: securityInfo.getTls(req.params.url) };
+    case 'threat.getState':
+      return { ok: true, data: await threatProtection.getState() };
+    case 'threat.setEnabled':
+      return { ok: true, data: await threatProtection.setEnabled(req.params.enabled) };
+    case 'threat.report':
+      return { ok: true, data: await reportThreat(req.params.url, req.params.signals) };
     case 'native.ping':
       try {
         const ping = await nativeHost.ping();

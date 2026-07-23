@@ -30,6 +30,7 @@ const buildOptions = {
     'sidebar/index': resolve(srcDir, 'sidebar/index.ts'),
     'content/overlay': resolve(srcDir, 'content/overlay.ts'),
     'content/enrich-overlay': resolve(srcDir, 'content/enrich-overlay.ts'),
+    'content/threat-scan': resolve(srcDir, 'content/threat-scan.ts'),
     'devtools/devtools': resolve(srcDir, 'devtools/devtools.ts'),
     'devtools/panel': resolve(srcDir, 'devtools/panel.ts'),
   },

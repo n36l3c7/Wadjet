@@ -49,6 +49,18 @@
           </p>
         </section>
 
+        <section class="protection" aria-label="On-page protection">
+          <h2 class="section__title">On-page protection</h2>
+          <label class="protection__row">
+            <input type="checkbox" id="protection-toggle" />
+            Warn me about phishing / ClickFix pages
+          </label>
+          <p class="protection__hint" id="protection-hint">
+            Scans pages you visit locally and shows an explainable banner when a deterministic
+            signal fires. Enabling asks, once, for permission to read pages on all sites.
+          </p>
+        </section>
+
         <section class="enrich" aria-label="Enrichment">
           <h2 class="section__title">Enrichment</h2>
           <div class="enrich__row">
@@ -138,6 +150,7 @@
               <option value="detonation">Detonations</option>
               <option value="page-analysis">Page analysis</option>
               <option value="tool-result">Tool results</option>
+              <option value="threat-finding">Threats</option>
             </select>
             <input
               id="filter-text"

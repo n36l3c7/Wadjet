@@ -25,6 +25,7 @@ import type { ExportFile, ExportFormat } from '../export';
 import type { NativeTool } from '../native/protocol';
 import type { SettingsView } from '../settings/store';
 import type { EntryPage, EntryQuery } from '../storage/types';
+import type { ThreatAugmentation, ThreatSignal, ThreatState } from '../threat/types';
 import type { CaptureState } from '../traffic/state';
 
 /**
@@ -98,6 +99,12 @@ export interface RequestMap {
   'native.tool': {
     params: { caseId: string | null; tool: NativeTool; input: string };
     result: { ok: boolean; output: string; exitCode: number; error: string | null };
+  };
+  'threat.getState': { params: Record<string, never>; result: ThreatState };
+  'threat.setEnabled': { params: { enabled: boolean }; result: ThreatState };
+  'threat.report': {
+    params: { url: string; signals: ThreatSignal[] };
+    result: { augmentation: ThreatAugmentation; recorded: boolean };
   };
 }
 

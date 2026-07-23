@@ -12,6 +12,7 @@
 import type { SecurityHeaderFinding, TlsInfo } from '../analysis/types';
 import type { EnrichmentResult } from '../enrich/types';
 import type { ContentStore, EntryPage, EntryQuery, MetadataStore } from '../storage/types';
+import type { ThreatSignal } from '../threat/types';
 import type { CapturedRequest } from '../traffic/request-tracker';
 import { normalizeTags } from './tags';
 import {
@@ -24,6 +25,7 @@ import {
   type NoteEntry,
   type PageAnalysisEntry,
   type RequestEntry,
+  type ThreatFindingEntry,
   type ToolResultEntry,
 } from './types';
 
@@ -379,6 +381,40 @@ export class CaseService {
       input: params.input,
       output: params.output,
       exitCode: params.exitCode,
+    };
+    await this.#content.addEntry(entry);
+    return entry;
+  }
+
+  /**
+   * Record a deterministic on-page threat finding (phishing / ClickFix) against
+   * an open case, with any gated context (reputation results, domain age).
+   *
+   * @throws {CaseNotFoundError} If the case does not exist.
+   * @throws {CaseClosedError} If the case is closed.
+   * @throws {EmptyValueError} If there are no signals to record.
+   */
+  async addThreatFinding(
+    caseId: string,
+    params: {
+      url: string;
+      signals: readonly ThreatSignal[];
+      enrichment: readonly EnrichmentResult[];
+      domainAgeDays: number | null;
+    },
+  ): Promise<ThreatFindingEntry> {
+    const target = await this.#requireOpenCase(caseId);
+    if (params.signals.length === 0) throw new EmptyValueError('Threat signals');
+    const entry: ThreatFindingEntry = {
+      id: this.#newId(),
+      caseId: target.id,
+      kind: 'threat-finding',
+      timestamp: this.#now(),
+      tags: [],
+      url: params.url,
+      signals: [...params.signals],
+      enrichment: [...params.enrichment],
+      domainAgeDays: params.domainAgeDays,
     };
     await this.#content.addEntry(entry);
     return entry;

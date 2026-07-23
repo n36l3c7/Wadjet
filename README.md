@@ -20,10 +20,12 @@ reimplement them. See [Non-goals](#non-goals).
 
 ## Status
 
-**v1.2.0.** Adds **case deletion** — remove a case and all of its entries from
-the sidebar, behind an inline two-step confirm. Builds on **v1.1.0** (the
-_uraeus_ visual identity with a compact icon build, and the README banner) and
-the hardened **v1.0.0** first release: a permission audit, a documented
+**v1.3.0.** Adds optional **on-page protection** — a sidebar toggle that scans
+each page locally and shows a non-blocking, explainable banner when a
+deterministic **phishing** or **ClickFix** signal fires (no score, no ML; see
+[ADR 0020](docs/adr/0020-on-page-threat-signals.md)). Builds on **v1.2.0** (case
+deletion), **v1.1.0** (the _uraeus_ visual identity and README banner), and the
+hardened **v1.0.0** first release: a permission audit, a documented
 [threat model](THREAT_MODEL.md), a security-review pass, a reviewed AMO
 data-collection declaration, and an automated signing/submission step in CI.
 

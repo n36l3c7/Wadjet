@@ -21,6 +21,7 @@ import type {
   NoteEntry,
   PageAnalysisEntry,
   RequestEntry,
+  ThreatFindingEntry,
   ToolResultEntry,
 } from '../core/case/types';
 import type { NativeTool } from '../core/native/protocol';
@@ -53,6 +54,8 @@ const ui = {
   captureRetain: must<HTMLInputElement>('#capture-retain'),
   captureStatus: must<HTMLElement>('#capture-status'),
   captureHint: must<HTMLParagraphElement>('#capture-hint'),
+  protectionToggle: must<HTMLInputElement>('#protection-toggle'),
+  protectionHint: must<HTMLParagraphElement>('#protection-hint'),
   filterKind: must<HTMLSelectElement>('#filter-kind'),
   filterText: must<HTMLInputElement>('#filter-text'),
   timelineList: must<HTMLUListElement>('#timeline-list'),
@@ -385,6 +388,33 @@ function renderToolResult(entry: ToolResultEntry): HTMLLIElement {
   return li;
 }
 
+function renderThreatFinding(entry: ThreatFindingEntry): HTMLLIElement {
+  const li = document.createElement('li');
+  li.className = 'timeline-entry';
+  const high = entry.signals.some((signal) => signal.severity === 'high');
+  const head = document.createElement('div');
+  head.className = 'timeline-entry__head';
+  head.append(span('', high ? 'threat ⚠' : 'threat'), span('', formatTime(entry.timestamp)));
+  const body = document.createElement('div');
+  body.className = 'timeline-entry__body';
+  body.append(span('threat__url', entry.url));
+  for (const signal of entry.signals) {
+    const box = document.createElement('div');
+    box.className = 'threat-signal';
+    box.append(
+      span('threat-signal__title', signal.title),
+      span('threat-signal__exp', signal.explanation),
+    );
+    body.append(box);
+  }
+  if (entry.domainAgeDays !== null) {
+    body.append(span('threat-signal__exp', `Domain age: ${String(entry.domainAgeDays)} day(s).`));
+  }
+  li.append(head, body);
+  for (const tag of entry.tags) li.append(renderTag(tag));
+  return li;
+}
+
 function renderEntry(entry: CaseEntry): HTMLLIElement {
   switch (entry.kind) {
     case 'note':
@@ -401,6 +431,8 @@ function renderEntry(entry: CaseEntry): HTMLLIElement {
       return renderPageAnalysis(entry);
     case 'tool-result':
       return renderToolResult(entry);
+    case 'threat-finding':
+      return renderThreatFinding(entry);
   }
 }
 
@@ -429,6 +461,11 @@ function matchesTextFilter(entry: CaseEntry): boolean {
       break;
     case 'tool-result':
       haystack = `${entry.tool} ${entry.input} ${entry.output}`;
+      break;
+    case 'threat-finding':
+      haystack = `${entry.url} ${entry.signals
+        .map((signal) => `${signal.title} ${signal.explanation}`)
+        .join(' ')}`;
       break;
   }
   return haystack.toLowerCase().includes(query);
@@ -498,14 +535,16 @@ async function loadMore(): Promise<void> {
 }
 
 async function refresh(): Promise<void> {
-  const [cases, active, capture] = await Promise.all([
+  const [cases, active, capture, threat] = await Promise.all([
     sendRequest('case.list', {}),
     sendRequest('case.getActive', {}),
     sendRequest('capture.getState', {}),
+    sendRequest('threat.getState', {}),
   ]);
 
   state.activeCaseId = active?.id ?? null;
   state.capture = capture;
+  ui.protectionToggle.checked = threat.enabled;
 
   ui.casesList.replaceChildren(...cases.map(renderCaseItem));
   ui.casesEmpty.hidden = cases.length > 0;
@@ -578,6 +617,21 @@ async function startCapture(): Promise<void> {
 
 async function stopCapture(): Promise<void> {
   await sendRequest('capture.stop', {});
+  await refresh();
+}
+
+async function setProtection(enabled: boolean): Promise<void> {
+  // permissions.request must run inside the click gesture, before any await.
+  if (enabled) {
+    const granted = await browser.permissions.request({ origins: [ALL_URLS] });
+    if (!granted) {
+      ui.protectionToggle.checked = false;
+      ui.protectionHint.textContent =
+        'Permission denied — protection needs access to pages on all sites.';
+      return;
+    }
+  }
+  await sendRequest('threat.setEnabled', { enabled });
   await refresh();
 }
 
@@ -713,6 +767,10 @@ ui.btnCaptureToggle.addEventListener('click', () => {
   }
 });
 
+ui.protectionToggle.addEventListener('change', () => {
+  void run('protection', setProtection(ui.protectionToggle.checked));
+});
+
 ui.filterKind.addEventListener('change', () => {
   const value = ui.filterKind.value;
   state.kindFilter =
@@ -722,7 +780,8 @@ ui.filterKind.addEventListener('change', () => {
     value === 'enrichment' ||
     value === 'detonation' ||
     value === 'page-analysis' ||
-    value === 'tool-result'
+    value === 'tool-result' ||
+    value === 'threat-finding'
       ? value
       : 'all';
   if (state.activeCaseId !== null) {

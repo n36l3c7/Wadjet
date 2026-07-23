@@ -71,6 +71,9 @@ export function extractIocs(entries: readonly CaseEntry[]): Ioc[] {
         if (classified) add(classified.type, classified.value, 'enrichment');
         break;
       }
+      case 'threat-finding':
+        addUrlAndHost(entry.url, 'threat');
+        break;
       case 'note':
         break;
     }

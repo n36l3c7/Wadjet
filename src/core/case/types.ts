@@ -9,6 +9,7 @@
  */
 import type { SecurityHeaderFinding, TlsInfo } from '../analysis/types';
 import type { EnrichmentResult } from '../enrich/types';
+import type { ThreatSignal } from '../threat/types';
 
 /**
  * Schema version of the case data model written by this build.
@@ -42,8 +43,9 @@ export interface Case {
  *
  * Wave 1 added `note`; Wave 2 added `request`; Wave 3 added `decoded-artifact`;
  * Wave 4 added `enrichment`; Wave 5 added `detonation`; Wave 7 added
- * `page-analysis`; Wave 8 adds `tool-result`. The discriminated-union design
- * keeps timeline, tagging and export code agnostic to which kinds exist.
+ * `page-analysis`; Wave 8 added `tool-result`; Wave 13 adds `threat-finding`.
+ * The discriminated-union design keeps timeline, tagging and export code
+ * agnostic to which kinds exist.
  */
 export type CaseEntryKind =
   | 'note'
@@ -52,7 +54,8 @@ export type CaseEntryKind =
   | 'enrichment'
   | 'detonation'
   | 'page-analysis'
-  | 'tool-result';
+  | 'tool-result'
+  | 'threat-finding';
 
 /** Fields shared by every entry, regardless of {@link CaseEntryKind}. */
 export interface CaseEntryBase {
@@ -199,6 +202,20 @@ export interface ToolResultEntry extends CaseEntryBase {
 }
 
 /**
+ * A deterministic on-page threat finding (phishing / ClickFix) recorded from the
+ * in-page warning banner. Holds the signals that fired plus any gated context:
+ * reputation results (when providers were configured) and the registrable-domain
+ * age (when the native host was available).
+ */
+export interface ThreatFindingEntry extends CaseEntryBase {
+  readonly kind: 'threat-finding';
+  readonly url: string;
+  readonly signals: ThreatSignal[];
+  readonly enrichment: EnrichmentResult[];
+  readonly domainAgeDays: number | null;
+}
+
+/**
  * Any entry attached to a case. A discriminated union over {@link CaseEntryKind};
  * narrow on `kind` to reach kind-specific fields.
  */
@@ -209,4 +226,5 @@ export type CaseEntry =
   | EnrichmentEntry
   | DetonationEntry
   | PageAnalysisEntry
-  | ToolResultEntry;
+  | ToolResultEntry
+  | ThreatFindingEntry;

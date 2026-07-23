@@ -8,6 +8,31 @@ During the `0.x` series, each wave maps to a minor version.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-07-23
+
+### Added
+
+- **Wave 13 — On-page threat signals (phishing & ClickFix).**
+- Optional **on-page protection** (a sidebar toggle): while enabled, Wadjet scans
+  each page you visit **locally** and, when a deterministic signal fires, shows a
+  **non-blocking, explainable banner** that lists exactly which checks matched.
+- Phishing signals: punycode/IDN hostnames, a password form that submits
+  cross-origin, credentials over HTTP or to a raw IP address, and brand-vs-host
+  mismatch on a credential page.
+- ClickFix signals: a fake human-verification page that instructs you to run a
+  command (e.g. Win+R / paste into PowerShell).
+- "Save to case" records a new `threat-finding` entry and, **only when
+  configured**, augments it with provider reputation and the domain's age via the
+  native host. The flagged URL is also extracted as an IOC in exports.
+- There is no score and no ML classification — every finding is a list of
+  individually explained signals (see ADR 0020).
+
+### Note
+
+- Automatic scanning reuses the optional `<all_urls>` host permission, requested
+  only when you turn protection on; nothing is sent off-device until you click
+  "Save to case".
+
 ## [1.2.0] - 2026-07-23
 
 ### Added
@@ -236,7 +261,8 @@ During the `0.x` series, each wave maps to a minor version.
   `web-ext lint` on every push and pull request.
 - Documentation: README, CONTRIBUTING, and SECURITY.
 
-[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/n36l3c7/Wadjet/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/n36l3c7/Wadjet/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/n36l3c7/Wadjet/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/n36l3c7/Wadjet/compare/v0.9.0...v1.0.0

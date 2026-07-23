@@ -212,6 +212,48 @@ body {
   font-weight: 600;
 }
 
+.protection__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.protection__hint {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.threat__url {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  word-break: break-all;
+  margin-bottom: 4px;
+}
+
+.threat-signal {
+  margin-top: 6px;
+  padding: 5px 8px;
+  background: var(--bg-input);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--radius);
+}
+
+.threat-signal__title {
+  display: block;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.threat-signal__exp {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
 .timeline {
   flex: 1;
 }
