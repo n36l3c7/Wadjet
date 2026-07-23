@@ -20,9 +20,10 @@ reimplement them. See [Non-goals](#non-goals).
 
 ## Status
 
-**v1.1.0.** Adds the project's visual identity — the _uraeus_ mark (with a
-compact build for small sizes) and the README banner — on top of the hardened
-**v1.0.0** first release: a permission audit, a documented
+**v1.2.0.** Adds **case deletion** — remove a case and all of its entries from
+the sidebar, behind an inline two-step confirm. Builds on **v1.1.0** (the
+_uraeus_ visual identity with a compact icon build, and the README banner) and
+the hardened **v1.0.0** first release: a permission audit, a documented
 [threat model](THREAT_MODEL.md), a security-review pass, a reviewed AMO
 data-collection declaration, and an automated signing/submission step in CI.
 

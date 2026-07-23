@@ -38,6 +38,7 @@ export interface RequestMap {
   'case.create': { params: { name: string }; result: Case };
   'case.open': { params: { id: string }; result: Case };
   'case.close': { params: { id: string }; result: Case };
+  'case.delete': { params: { id: string }; result: Case };
   'case.entries': { params: { caseId: string; query: EntryQuery }; result: EntryPage };
   'note.add': { params: { caseId: string; text: string; tags: string[] }; result: NoteEntry };
   'decoded.add': {

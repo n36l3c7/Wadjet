@@ -190,6 +190,12 @@ async function dispatch(req: AnyRequest): Promise<Response<RequestType>> {
       await capture.onCaseClosed(closed.id);
       return { ok: true, data: closed };
     }
+    case 'case.delete': {
+      // Stop any capture bound to the case before its records disappear.
+      await capture.onCaseClosed(req.params.id);
+      const deleted = await service.deleteCase(req.params.id);
+      return { ok: true, data: deleted };
+    }
     case 'case.entries':
       return { ok: true, data: await service.getEntries(req.params.caseId, req.params.query) };
     case 'note.add':

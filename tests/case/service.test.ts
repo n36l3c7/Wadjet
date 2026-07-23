@@ -102,6 +102,31 @@ describe('CaseService', () => {
     expect(closedAgain.closedAt).toBe(closed.closedAt);
   });
 
+  it('deletes a case with its entries and clears the active pointer', async () => {
+    const created = await service.createCase('to delete');
+    await service.addNote(created.id, 'a note');
+
+    const deleted = await service.deleteCase(created.id);
+    expect(deleted.id).toBe(created.id);
+    expect(await service.listCases()).toEqual([]);
+    expect(await service.getActiveCase()).toBeUndefined();
+    expect(await service.getCase(created.id)).toBeUndefined();
+    expect(await service.getTimeline(created.id)).toEqual([]);
+  });
+
+  it('leaves the active pointer intact when deleting a non-active case', async () => {
+    const first = await service.createCase('first');
+    const second = await service.createCase('second'); // second is now active
+
+    await service.deleteCase(first.id);
+    expect(await service.getActiveCase()).toMatchObject({ id: second.id });
+    expect((await service.listCases()).map((c) => c.id)).toEqual([second.id]);
+  });
+
+  it('throws when deleting an unknown case', async () => {
+    await expect(service.deleteCase('missing')).rejects.toBeInstanceOf(CaseNotFoundError);
+  });
+
   it('adds notes to an open case, ordered on the timeline', async () => {
     const created = await service.createCase('active');
     await service.addNote(created.id, 'first observation', ['Phishing', 'phishing']);

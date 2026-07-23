@@ -110,10 +110,58 @@ function renderCaseItem(entry: { id: string; name: string; status: string }): HT
   li.className = 'case-item';
   li.dataset.id = entry.id;
   li.setAttribute('aria-current', String(entry.id === state.activeCaseId));
-  li.append(span('', entry.name), span('case-item__meta', entry.status));
-  li.addEventListener('click', () => {
+
+  const label = document.createElement('div');
+  label.className = 'case-item__label';
+  label.append(span('', entry.name), span('case-item__meta', entry.status));
+  label.addEventListener('click', () => {
     void run('open case', openCase(entry.id));
   });
+
+  const actions = document.createElement('div');
+  actions.className = 'case-item__actions';
+
+  // Two-step inline confirm: the trash icon expands into Delete / Cancel so a
+  // stray click can never destroy a case's data.
+  const showIdle = (): void => {
+    actions.replaceChildren();
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'icon-btn';
+    del.title = 'Delete case';
+    del.setAttribute('aria-label', `Delete case "${entry.name}"`);
+    del.textContent = '🗑';
+    del.addEventListener('click', (event) => {
+      event.stopPropagation();
+      showConfirm();
+    });
+    actions.append(del);
+  };
+
+  const showConfirm = (): void => {
+    actions.replaceChildren();
+    const confirmBtn = document.createElement('button');
+    confirmBtn.type = 'button';
+    confirmBtn.className = 'btn btn--sm btn--danger';
+    confirmBtn.textContent = 'Delete';
+    confirmBtn.setAttribute('aria-label', `Confirm deletion of case "${entry.name}"`);
+    confirmBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      void run('delete case', deleteCase(entry.id));
+    });
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'btn btn--sm';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      showIdle();
+    });
+    actions.append(span('case-item__confirm', 'Delete?'), confirmBtn, cancelBtn);
+  };
+
+  showIdle();
+  li.append(label, actions);
   return li;
 }
 
@@ -504,6 +552,11 @@ async function openCase(id: string): Promise<void> {
 async function closeActiveCase(): Promise<void> {
   if (state.activeCaseId === null) return;
   await sendRequest('case.close', { id: state.activeCaseId });
+  await refresh();
+}
+
+async function deleteCase(id: string): Promise<void> {
+  await sendRequest('case.delete', { id });
   await refresh();
 }
 

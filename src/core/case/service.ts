@@ -158,6 +158,27 @@ export class CaseService {
   }
 
   /**
+   * Permanently delete a case and every entry belonging to it. If the deleted
+   * case was the active one, the active pointer is cleared. This is
+   * irreversible; entries and the case record are removed from storage.
+   *
+   * @param id - Target case id.
+   * @returns The case record as it was just before deletion.
+   * @throws {CaseNotFoundError} If no case has that id.
+   */
+  async deleteCase(id: string): Promise<Case> {
+    const existing = await this.#metadata.getCase(id);
+    if (existing === undefined) throw new CaseNotFoundError(id);
+
+    await this.#content.deleteEntriesForCase(id);
+    await this.#metadata.deleteCase(id);
+    if ((await this.#metadata.getActiveCaseId()) === id) {
+      await this.#metadata.setActiveCaseId(null);
+    }
+    return existing;
+  }
+
+  /**
    * Append a free-text note to an open case.
    *
    * @param caseId - Target case; must exist and be open.

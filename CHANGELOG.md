@@ -8,6 +8,17 @@ During the `0.x` series, each wave maps to a minor version.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-07-23
+
+### Added
+
+- **Wave 12 — Case deletion.**
+- Permanently delete a case and all of its entries from the sidebar. Each row in
+  the **Cases** list has a trash action that expands into an inline
+  **Delete / Cancel** confirm — a two-step guard, no system dialog. Deleting the
+  active case clears the active-case pointer, and any traffic capture bound to it
+  is stopped first.
+
 ## [1.1.0] - 2026-07-23
 
 ### Added
@@ -225,7 +236,8 @@ During the `0.x` series, each wave maps to a minor version.
   `web-ext lint` on every push and pull request.
 - Documentation: README, CONTRIBUTING, and SECURITY.
 
-[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/n36l3c7/Wadjet/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/n36l3c7/Wadjet/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/n36l3c7/Wadjet/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/n36l3c7/Wadjet/compare/v0.9.0...v1.0.0
 [0.9.0]: https://github.com/n36l3c7/Wadjet/compare/v0.8.0...v0.9.0

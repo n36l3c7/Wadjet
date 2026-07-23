@@ -151,9 +151,65 @@ body {
   border-color: var(--accent);
 }
 
+.case-item__label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+}
+
 .case-item__meta {
   font-size: 0.72rem;
   color: var(--text-dim);
+}
+
+.case-item__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.case-item__confirm {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.icon-btn {
+  padding: 4px 6px;
+  font: inherit;
+  line-height: 1;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.icon-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.btn--sm {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+}
+
+.btn--danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+  font-weight: 600;
 }
 
 .timeline {
